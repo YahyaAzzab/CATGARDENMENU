@@ -1,0 +1,394 @@
+/* ─── Google Fonts ─────────────────────────────────────────────── */
+/* Libre Baskerville for display titles: elegant, editorial feel */
+/* Nunito for body: rounded, friendly, highly legible on mobile */
+@import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Nunito:ital,wght@0,300..1000;1,300..1000&display=swap');
+
+@import "tailwindcss";
+
+/* ─── Cat's Garden Design System ──────────────────────────────── */
+/* Palette: "Jardin secret des chats" – warm, cozy, premium */
+@theme {
+  /* ── Primary colors ── */
+  --color-cream: #FDF6EC;
+  --color-cream-dark: #F5EBD9;
+  --color-cream-light: #FFFDF8;
+
+  /* ── Sage green – "jardin" ── */
+  --color-sage: #8BA888;
+  --color-sage-dark: #6B8E6B;
+  --color-sage-light: #B5CEAA;
+  --color-sage-muted: #D5E3CF;
+
+  /* ── Peach / Orange – "poil de chat" ── */
+  --color-peach: #E8A87C;
+  --color-peach-dark: #D4885A;
+  --color-peach-light: #F5CEB0;
+  --color-peach-muted: #FADEC8;
+
+  /* ── Chocolate brown – text ── */
+  --color-chocolate: #3E2723;
+  --color-chocolate-light: #5D4037;
+  --color-chocolate-muted: #8D6E63;
+
+  /* ── Rose pâle – accent ── */
+  --color-rose: #F2C6C2;
+  --color-rose-dark: #E5A5A0;
+  --color-rose-light: #FBE5E3;
+
+  /* ── Semantic ── */
+  --color-success: #7CB342;
+  --color-warning: #FFB74D;
+  --color-error: #E57373;
+
+  /* ── Shadows ── */
+  --shadow-card: 0 2px 12px rgba(62, 39, 35, 0.08);
+  --shadow-card-hover: 0 4px 20px rgba(62, 39, 35, 0.14);
+  --shadow-floating: 0 8px 32px rgba(62, 39, 35, 0.12);
+
+  /* ── Typography ── */
+  --font-display: 'Libre Baskerville', 'Georgia', serif;
+  --font-body: 'Nunito', 'Segoe UI', sans-serif;
+
+  /* ── Radius ── */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* ── Spacing ── */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+}
+
+/* ─── Base Styles ─────────────────────────────────────────────── */
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+  /* Prevent horizontal overflow on mobile */
+  overflow-x: hidden;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-body);
+  background-color: var(--color-cream);
+  color: var(--color-chocolate);
+  line-height: 1.6;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  /* Safe area support */
+  padding-top: env(safe-area-inset-top);
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--color-chocolate);
+}
+
+/* Prevent zoom on input focus (iOS) */
+input, textarea, select {
+  font-size: 16px !important;
+}
+
+/* ─── Hide Scrollbar Utility ──────────────────────────────────── */
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* ─── Scrollbar Styling ───────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-sage-muted);
+  border-radius: var(--radius-full);
+}
+
+/* ─── Card & UI Styles ────────────────────────────────────────── */
+.card-menu {
+  background: white;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  border: 1px solid rgba(139, 168, 136, 0.12);
+  transition: box-shadow 0.25s ease, transform 0.15s ease;
+  -webkit-user-select: none;
+  user-select: none;
+  /* Minimum touch target */
+  min-height: 44px;
+}
+
+.card-menu:active {
+  box-shadow: var(--shadow-card-hover);
+}
+
+/* ─── Badge Styles ────────────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.badge-new {
+  background-color: var(--color-sage-light);
+  color: var(--color-sage-dark);
+}
+
+.badge-signature {
+  background-color: var(--color-peach-light);
+  color: var(--color-peach-dark);
+}
+
+.badge-popular {
+  background-color: var(--color-rose-light);
+  color: var(--color-rose-dark);
+}
+
+/* ─── Tag Chip ────────────────────────────────────────────────── */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-size: 0.65rem;
+  font-weight: 600;
+  background: var(--color-cream-dark);
+  color: var(--color-chocolate-muted);
+  white-space: nowrap;
+}
+
+.chip-vegetarian {
+  background: #E8F5E9;
+  color: #2E7D32;
+}
+.chip-vegan {
+  background: #E8F5E9;
+  color: #1B5E20;
+}
+.chip-chocolate {
+  background: #EFEBE9;
+  color: #4E342E;
+}
+.chip-spicy {
+  background: #FBE9E7;
+  color: #BF360C;
+}
+.chip-traditional {
+  background: var(--color-peach-muted);
+  color: var(--color-peach-dark);
+}
+
+/* ─── Category Pill ───────────────────────────────────────────── */
+.category-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: var(--font-body);
+  white-space: nowrap;
+  border: 1.5px solid var(--color-sage-muted);
+  background: white;
+  color: var(--color-chocolate-light);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  min-height: 38px;
+}
+
+.category-pill:active {
+  border-color: var(--color-sage);
+  background: var(--color-sage-muted);
+}
+
+.category-pill-active {
+  background: var(--color-sage);
+  color: white;
+  border-color: var(--color-sage);
+}
+
+.category-pill-active:active {
+  background: var(--color-sage-dark);
+  border-color: var(--color-sage-dark);
+}
+
+/* ─── Price Tag ───────────────────────────────────────────────── */
+.price-tag {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--color-sage-dark);
+  white-space: nowrap;
+}
+
+.price-note {
+  font-size: 0.7rem;
+  font-style: italic;
+  color: var(--color-chocolate-muted);
+}
+
+/* ─── Language Switcher ───────────────────────────────────────── */
+.lang-switch {
+  display: inline-flex;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  border: 1.5px solid var(--color-sage-muted);
+  background: white;
+}
+
+.lang-switch button {
+  padding: 4px 12px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: var(--font-body);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: transparent;
+  color: var(--color-chocolate-muted);
+  min-height: 30px;
+}
+
+.lang-switch button.active {
+  background: var(--color-sage);
+  color: white;
+}
+
+/* ─── Decorative paw watermark ────────────────────────────────── */
+.paw-watermark {
+  position: fixed;
+  bottom: -20px;
+  right: -20px;
+  width: 120px;
+  height: 120px;
+  opacity: 0.04;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ─── Category Note ───────────────────────────────────────────── */
+.category-note {
+  font-size: 0.78rem;
+  font-style: italic;
+  color: var(--color-chocolate-muted);
+  background: var(--color-cream-dark);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--color-sage-muted);
+  margin-top: var(--space-md);
+}
+
+/* ─── Included choices badge ──────────────────────────────────── */
+.included-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 8px;
+  border-radius: var(--radius-full);
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: var(--color-sage-muted);
+  color: var(--color-sage-dark);
+}
+
+/* ─── Text clamp utility ──────────────────────────────────────── */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ─── Minimum text size for accessibility ─────────────────────── */
+.card-menu p,
+.card-menu span,
+.card-menu h3 {
+  min-height: 0; /* allow flex shrink */
+}
+
+/* ─── Desktop / Tablet Layout ─────────────────────────────────── */
+@media (min-width: 768px) {
+  .app-content {
+    max-width: 520px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  body {
+    /* Decorative background for desktop */
+    background-image:
+      radial-gradient(circle at 10% 20%, var(--color-sage-muted) 0%, transparent 50%),
+      radial-gradient(circle at 90% 80%, var(--color-peach-muted) 0%, transparent 50%);
+    background-attachment: fixed;
+  }
+
+  .app-content {
+    background: var(--color-cream);
+    min-height: 100dvh;
+    box-shadow: 0 0 60px rgba(62, 39, 35, 0.08);
+  }
+}
+
+@media (min-width: 1024px) {
+  .app-content {
+    max-width: 480px;
+    border-radius: 0;
+  }
+}
+
+/* ─── Reduced motion ──────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ─── Focus styles for accessibility ──────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-sage);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ─── Overscroll behavior ─────────────────────────────────────── */
+.overscroll-contain {
+  overscroll-behavior: contain;
+}
