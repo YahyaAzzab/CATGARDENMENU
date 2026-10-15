@@ -6,7 +6,7 @@ interface I18nContextType {
   t: Translations;
   setLocale: (locale: Locale) => void;
   /** Get the FR or EN field from data objects */
-  localized: <T extends Record<string, unknown>>(obj: T, fieldBase: string) => string;
+  localized: <T extends object>(obj: T, fieldBase: string) => string;
 }
 
 const I18nContext = createContext<I18nContextType | null>(null);
@@ -16,10 +16,11 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const t = translations[locale];
 
   const localized = useCallback(
-    <T extends Record<string, unknown>>(obj: T, fieldBase: string): string => {
+    <T extends object>(obj: T, fieldBase: string): string => {
       const suffix = locale === 'fr' ? 'Fr' : 'En';
       const key = `${fieldBase}${suffix}`;
-      return (obj[key] as string) ?? (obj[`${fieldBase}Fr`] as string) ?? '';
+      const record = obj as Record<string, string | undefined>;
+      return record[key] ?? record[`${fieldBase}Fr`] ?? '';
     },
     [locale]
   );

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { I18nProvider, useI18n } from './i18n/I18nContext';
 import { categories, menuItems, getItemsByCategory } from './data/menu';
 import type { MenuItem } from './data/types';
