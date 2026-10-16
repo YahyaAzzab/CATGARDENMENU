@@ -150,7 +150,7 @@ input, textarea, select {
   gap: 4px;
   padding: 2px 8px;
   border-radius: var(--radius-full);
-  font-size: 0.62rem;
+  font-size: 0.94rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -179,7 +179,7 @@ input, textarea, select {
   gap: 3px;
   padding: 2px 8px;
   border-radius: var(--radius-full);
-  font-size: 0.65rem;
+  font-size: 0.94rem;
   font-weight: 600;
   background: var(--color-cream-dark);
   color: var(--color-chocolate-muted);
@@ -214,7 +214,7 @@ input, textarea, select {
   gap: 6px;
   padding: 8px 16px;
   border-radius: var(--radius-full);
-  font-size: 0.78rem;
+  font-size: 0.94rem;
   font-weight: 700;
   font-family: var(--font-body);
   white-space: nowrap;
@@ -222,9 +222,9 @@ input, textarea, select {
   background: white;
   color: var(--color-chocolate-light);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
   flex-shrink: 0;
-  min-height: 38px;
+  min-height: 44px;
 }
 
 .category-pill:active {
@@ -247,13 +247,24 @@ input, textarea, select {
 .price-tag {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 0.98rem;
   color: var(--color-sage-dark);
   white-space: nowrap;
 }
 
+.chips-fade-right {
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 2;
+  width: 40px;
+  height: 100%;
+  background: linear-gradient(to right, transparent, var(--color-cream));
+}
+
 .price-note {
-  font-size: 0.7rem;
+  font-size: 0.94rem;
   font-style: italic;
   color: var(--color-chocolate-muted);
 }
@@ -268,8 +279,8 @@ input, textarea, select {
 }
 
 .lang-switch button {
-  padding: 4px 12px;
-  font-size: 0.72rem;
+  padding: 4px 14px;
+  font-size: 0.94rem;
   font-weight: 700;
   font-family: var(--font-body);
   border: none;
@@ -277,7 +288,7 @@ input, textarea, select {
   transition: all 0.2s ease;
   background: transparent;
   color: var(--color-chocolate-muted);
-  min-height: 30px;
+  min-height: 44px;
 }
 
 .lang-switch button.active {
@@ -299,7 +310,7 @@ input, textarea, select {
 
 /* ─── Category Note ───────────────────────────────────────────── */
 .category-note {
-  font-size: 0.78rem;
+  font-size: 0.94rem;
   font-style: italic;
   color: var(--color-chocolate-muted);
   background: var(--color-cream-dark);
@@ -316,7 +327,7 @@ input, textarea, select {
   gap: 4px;
   padding: 1px 8px;
   border-radius: var(--radius-full);
-  font-size: 0.6rem;
+  font-size: 0.94rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -340,32 +351,24 @@ input, textarea, select {
 }
 
 /* ─── Desktop / Tablet Layout ─────────────────────────────────── */
-@media (min-width: 768px) {
-  .app-content {
-    max-width: 520px;
-    margin: 0 auto;
-    position: relative;
-  }
-
-  body {
-    /* Decorative background for desktop */
-    background-image:
-      radial-gradient(circle at 10% 20%, var(--color-sage-muted) 0%, transparent 50%),
-      radial-gradient(circle at 90% 80%, var(--color-peach-muted) 0%, transparent 50%);
-    background-attachment: fixed;
-  }
-
-  .app-content {
-    background: var(--color-cream);
-    min-height: 100dvh;
-    box-shadow: 0 0 60px rgba(62, 39, 35, 0.08);
-  }
+body {
+  background-color: #F3E6D2;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cg fill='%238BA888' fill-opacity='0.07'%3E%3Cellipse cx='32' cy='42' rx='10' ry='8'/%3E%3Cellipse cx='22' cy='28' rx='5' ry='6' transform='rotate(-15 22 28)'/%3E%3Cellipse cx='32' cy='24' rx='5' ry='6'/%3E%3Cellipse cx='42' cy='28' rx='5' ry='6' transform='rotate(15 42 28)'/%3E%3Cpath d='M140 30c-18 4-24 20-28 32 2 1 4 1 6 0 8-14 16-22 28-24 4-8 10-12 16-14-8 0-16 2-22 6z'/%3E%3C/g%3E%3Cg fill='%23E8A87C' fill-opacity='0.06'%3E%3Cellipse cx='120' cy='130' rx='9' ry='7'/%3E%3Cellipse cx='111' cy='118' rx='4.5' ry='5.5' transform='rotate(-15 111 118)'/%3E%3Cellipse cx='120' cy='114' rx='4.5' ry='5.5'/%3E%3Cellipse cx='129' cy='118' rx='4.5' ry='5.5' transform='rotate(15 129 118)'/%3E%3C/g%3E%3C/svg%3E");
+  background-attachment: fixed;
 }
 
-@media (min-width: 1024px) {
+.app-content {
+  position: relative;
+  min-height: 100dvh;
+  background: var(--color-cream);
+}
+
+@media (min-width: 768px) {
   .app-content {
     max-width: 480px;
-    border-radius: 0;
+    margin: 0 auto;
+    box-shadow: 0 0 48px rgba(62, 39, 35, 0.07);
   }
 }
 

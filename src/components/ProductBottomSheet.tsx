@@ -5,6 +5,7 @@ import { useI18n } from '../i18n/I18nContext';
 import { Badge, Chip } from './UIComponents';
 import { getCategoryById } from '../data/menu';
 import { CategoryIcon } from './Icons';
+import { getItemImage } from '../lib/itemImages';
 
 interface BottomSheetProps {
   item: MenuItem | null;
@@ -87,16 +88,21 @@ function SheetContent({ item, locale, t, localized }: {
   const priceNote = locale === 'fr' ? item.priceNoteFr : item.priceNoteEn;
   const servingNote = locale === 'fr' ? item.servingNoteFr : item.servingNoteEn;
   const category = getCategoryById(item.categoryId);
+  const image = item.image ?? getItemImage(item.id);
 
   const visibleTags = item.tags.filter((tag) => !['hot', 'cold'].includes(tag));
 
   return (
     <>
       {/* Placeholder image */}
-      <div className="relative w-full h-44 rounded-2xl overflow-hidden mb-4 bg-gradient-to-br from-sage-muted/20 via-cream-dark/30 to-peach-muted/20">
-        <div className="absolute inset-0 flex items-center justify-center opacity-[0.12]">
-          {category && <CategoryIcon icon={category.icon} size={64} className="text-sage" />}
-        </div>
+      <div className="relative mb-4 h-52 w-full overflow-hidden rounded-2xl bg-[#FDF6EC]">
+        {image ? (
+          <img src={image} alt="" className="h-full w-full object-contain" />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center opacity-[0.12]">
+            {category && <CategoryIcon icon={category.icon} size={64} className="text-sage" />}
+          </div>
+        )}
         {!item.available && (
           <div className="absolute inset-0 bg-cream/70 flex items-center justify-center">
             <span className="text-sm font-bold text-chocolate-muted bg-white/80 px-4 py-2 rounded-full">

@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { useI18n } from '../i18n/I18nContext';
 
-export type FilterKey = 'vegetarian' | 'chocolate' | 'traditional' | 'signature' | 'popular';
+export type FilterKey = 'vegetarian' | 'chocolate' | 'signature' | 'popular';
 
 interface FilterChipsProps {
   activeFilters: Set<FilterKey>;
@@ -11,7 +11,6 @@ interface FilterChipsProps {
 const filterConfig: { key: FilterKey; labelKey: keyof ReturnType<typeof getLabels>; icon: string }[] = [
   { key: 'vegetarian', labelKey: 'vegetarian', icon: '🌱' },
   { key: 'chocolate', labelKey: 'chocolate', icon: '🍫' },
-  { key: 'traditional', labelKey: 'traditional', icon: '🏺' },
   { key: 'signature', labelKey: 'signature', icon: '⭐' },
   { key: 'popular', labelKey: 'popular', icon: '🔥' },
 ];
@@ -20,7 +19,6 @@ function getLabels(t: ReturnType<typeof useI18n>['t']) {
   return {
     vegetarian: t.filterVegetarian,
     chocolate: t.filterChocolate,
-    traditional: t.filterTraditional,
     signature: t.filterSignature,
     popular: t.filterPopular,
   };
@@ -32,7 +30,7 @@ export function FilterChips({ activeFilters, onToggle }: FilterChipsProps) {
 
   return (
     <div
-      className="flex gap-2 overflow-x-auto pb-2 mb-2 scrollbar-hide"
+      className="mb-2 flex gap-2 overflow-x-auto pb-2 scrollbar-hide"
       role="group"
       aria-label="Filters"
     >
@@ -44,17 +42,16 @@ export function FilterChips({ activeFilters, onToggle }: FilterChipsProps) {
             onClick={() => onToggle(key)}
             whileTap={{ scale: 0.93 }}
             className={`
-              flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-full
-              text-[0.78rem] font-semibold transition-all duration-200
-              min-h-[36px] border
+              flex min-h-[44px] flex-shrink-0 items-center gap-1.5 rounded-full border px-3.5
+              text-[0.94rem] font-semibold transition-all duration-200
               ${active
-                ? 'bg-sage text-white border-sage shadow-sm'
-                : 'bg-white/60 text-chocolate-muted border-sage-muted/30 hover:border-sage-muted/60'}
+                ? 'border-sage bg-sage text-white shadow-sm'
+                : 'border-sage-muted/30 bg-white/60 text-chocolate-muted'}
             `}
             style={{ fontFamily: 'var(--font-body)' }}
             aria-pressed={active}
           >
-            <span className="text-[0.85rem]">{icon}</span>
+            <span className="text-[0.95rem]">{icon}</span>
             {labels[labelKey]}
           </motion.button>
         );

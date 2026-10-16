@@ -30,6 +30,9 @@ export interface Translations {
   filterTraditional: string;
   filterSignature: string;
   filterPopular: string;
+  favoritesTitle: string;
+  backHome: string;
+  swipeHint: string;
 
   // Tags
   tagVegetarian: string;
@@ -81,7 +84,7 @@ export const translations: Record<Locale, Translations> = {
     priceFormat: (price: number) => `${price} DH`,
     searchPlaceholder: 'Rechercher un plat…',
     noResults: 'Aucun résultat trouvé',
-    itemCount: (count: number) => `${count} article${count > 1 ? 's' : ''}`,
+    itemCount: (count: number) => `${count} plat${count > 1 ? 's' : ''}`,
 
     splashTagline: 'Café, brunch et douceurs',
     tapToSkip: 'Touchez pour passer',
@@ -97,6 +100,9 @@ export const translations: Record<Locale, Translations> = {
     filterTraditional: 'Traditionnel',
     filterSignature: 'Signature',
     filterPopular: 'Populaire',
+    favoritesTitle: 'Coups de cœur',
+    backHome: 'Accueil',
+    swipeHint: 'Glissez pour changer de famille',
 
     tagVegetarian: 'Végétarien',
     tagVegan: 'Végan',
@@ -157,6 +163,9 @@ export const translations: Record<Locale, Translations> = {
     filterTraditional: 'Traditional',
     filterSignature: 'Signature',
     filterPopular: 'Popular',
+    favoritesTitle: 'Staff picks',
+    backHome: 'Home',
+    swipeHint: 'Swipe to see another family',
 
     tagVegetarian: 'Vegetarian',
     tagVegan: 'Vegan',

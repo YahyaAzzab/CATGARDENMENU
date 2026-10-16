@@ -2,7 +2,7 @@ import { useI18n } from '../i18n/I18nContext';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { Whiskers, PawPrint } from './Icons';
 
-export function Header() {
+export function Header({ onLogoClick }: { onLogoClick?: () => void }) {
   const { t } = useI18n();
 
   return (
@@ -12,7 +12,11 @@ export function Header() {
         style={{ paddingTop: 'max(env(safe-area-inset-top), 10px)' }}
       >
         {/* Logo + name */}
-        <div className="flex items-center gap-2">
+        <button
+          type="button"
+          className="flex min-h-[44px] items-center gap-2 text-left"
+          onClick={onLogoClick}
+        >
           <div className="w-9 h-9 rounded-xl bg-sage-muted/20 flex items-center justify-center">
             <Whiskers size={20} className="text-sage-dark" />
           </div>
@@ -29,7 +33,7 @@ export function Header() {
               <PawPrint size={5} className="text-peach-muted" />
             </div>
           </div>
-        </div>
+        </button>
 
         {/* Language switcher */}
         <LanguageSwitcher />

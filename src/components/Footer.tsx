@@ -63,7 +63,7 @@ export function Footer() {
             whileTap={{ scale: 0.95 }}
           >
             {link.icon}
-            <span className="text-[0.6rem] font-semibold text-center leading-tight" style={{ fontFamily: 'var(--font-body)' }}>
+            <span className="text-[0.94rem] font-semibold text-center leading-tight" style={{ fontFamily: 'var(--font-body)' }}>
               {link.label}
             </span>
           </motion.a>
@@ -73,7 +73,7 @@ export function Footer() {
       {/* Sleeping cat + credit */}
       <div className="flex flex-col items-center">
         <SleepingCat size={55} className="text-sage-muted/30 mb-2" />
-        <p className="text-[0.65rem] text-chocolate-muted/40 text-center mb-0.5">
+        <p className="text-[0.94rem] text-chocolate-muted/70 text-center mb-0.5">
           Cat's Garden · Fès, Maroc
         </p>
         <div className="flex gap-1 mb-2">
@@ -81,7 +81,7 @@ export function Footer() {
           <PawPrint size={5} className="text-sage-muted/50" />
           <PawPrint size={6} className="text-peach-muted/50" />
         </div>
-        <p className="text-[0.6rem] text-chocolate-muted/35 mt-1">
+        <p className="text-[0.94rem] text-chocolate-muted/70 mt-1">
           Créé par l'équipe{' '}
           <a
             href="https://bitaqa-project.vercel.app/fr"
