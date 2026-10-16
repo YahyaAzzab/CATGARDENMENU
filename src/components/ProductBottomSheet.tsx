@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { MenuItem } from '../data/types';
 import { useI18n } from '../i18n/I18nContext';
+import { pickLabeled, type Locale } from '../i18n/translations';
 import { Badge, Chip } from './UIComponents';
 import { getCategoryById } from '../data/menu';
 import { CategoryIcon } from './Icons';
@@ -79,14 +80,14 @@ export function ProductBottomSheet({ item, onClose }: BottomSheetProps) {
 
 function SheetContent({ item, locale, t, localized }: {
   item: MenuItem;
-  locale: string;
+  locale: Locale;
   t: ReturnType<typeof useI18n>['t'];
   localized: ReturnType<typeof useI18n>['localized'];
 }) {
   const name = localized(item, 'name');
   const description = localized(item, 'description');
-  const priceNote = locale === 'fr' ? item.priceNoteFr : item.priceNoteEn;
-  const servingNote = locale === 'fr' ? item.servingNoteFr : item.servingNoteEn;
+  const priceNote = localized(item, 'priceNote');
+  const servingNote = localized(item, 'servingNote');
   const category = getCategoryById(item.categoryId);
   const image = item.image ?? getItemImage(item.id);
 
@@ -173,9 +174,9 @@ function SheetContent({ item, locale, t, localized }: {
                 key={opt.nameFr}
                 className="text-[0.8rem] bg-sage-muted/20 text-chocolate px-3 py-1.5 rounded-full font-medium"
               >
-                {locale === 'fr' ? opt.nameFr : opt.nameEn}
+                {pickLabeled(locale, opt, 'name')}
                 {opt.extraPrice > 0 && (
-                  <span className="text-sage-dark ml-1">+{opt.extraPrice} {t.currency}</span>
+                  <span className="text-sage-dark ms-1">+{opt.extraPrice} {t.currency}</span>
                 )}
               </span>
             ))}
@@ -192,7 +193,7 @@ function SheetContent({ item, locale, t, localized }: {
           {item.includedChoices.map((choice) => (
             <div key={choice.labelFr} className="mb-2.5 last:mb-0">
               <span className="text-[0.78rem] font-semibold text-chocolate">
-                {locale === 'fr' ? choice.labelFr : choice.labelEn}
+                {pickLabeled(locale, choice, 'label')}
               </span>
               <div className="flex flex-wrap gap-1.5 mt-1">
                 {choice.options.map((opt) => (
@@ -200,7 +201,7 @@ function SheetContent({ item, locale, t, localized }: {
                     key={opt.nameFr}
                     className="text-[0.72rem] bg-white/70 text-chocolate-muted px-2 py-1 rounded-full"
                   >
-                    {locale === 'fr' ? opt.nameFr : opt.nameEn}
+                    {pickLabeled(locale, opt, 'name')}
                   </span>
                 ))}
               </div>
@@ -218,7 +219,7 @@ function SheetContent({ item, locale, t, localized }: {
           {item.supplements.map((sup) => (
             <div key={sup.nameFr} className="flex justify-between items-center py-1">
               <span className="text-[0.82rem] text-chocolate">
-                {locale === 'fr' ? sup.nameFr : sup.nameEn}
+                {pickLabeled(locale, sup, 'name')}
               </span>
               <span className="text-[0.82rem] font-semibold text-peach-dark">
                 +{sup.price} {t.currency}

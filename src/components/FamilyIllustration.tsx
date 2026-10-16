@@ -49,7 +49,7 @@ export function FamilyIllustration({
 
   return (
     <div
-      className={`absolute inset-0 bg-gradient-to-br ${conf.bg} ${className}`}
+      className={`family-visual absolute inset-0 bg-gradient-to-br ${conf.bg} ${className}`}
       aria-hidden="true"
     >
       <img

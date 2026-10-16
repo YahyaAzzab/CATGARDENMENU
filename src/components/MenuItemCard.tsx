@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { motion, useInView, useReducedMotion } from 'framer-motion';
 import type { MenuItem } from '../data/types';
 import { useI18n } from '../i18n/I18nContext';
+import { pickLabeled } from '../i18n/translations';
 import { Badge } from './UIComponents';
 import { getCategoryById } from '../data/menu';
 import { CategoryIcon } from './Icons';
@@ -36,7 +37,7 @@ export function MenuItemCard({ item, onTap, compact = false }: MenuItemCardProps
 
   const name = localized(item, 'name');
   const description = localized(item, 'description');
-  const priceNote = locale === 'fr' ? item.priceNoteFr : item.priceNoteEn;
+  const priceNote = localized(item, 'priceNote');
   const category = getCategoryById(item.categoryId);
   const image = item.image ?? getItemImage(item.id);
 
@@ -179,7 +180,7 @@ export function MenuItemCard({ item, onTap, compact = false }: MenuItemCardProps
           {item.includedChoices && item.includedChoices.length > 0 && (
             <div className="px-3 pb-3 -mt-1">
               <span className="text-[0.94rem] font-semibold text-sage-dark">
-                ✦ {t.included} : {item.includedChoices.map((c) => (locale === 'fr' ? c.labelFr : c.labelEn)).join(' + ')}
+                ✦ {t.included} : {item.includedChoices.map((c) => pickLabeled(locale, c, 'label')).join(' + ')}
               </span>
             </div>
           )}

@@ -14,7 +14,7 @@ export function Header({ onLogoClick }: { onLogoClick?: () => void }) {
         {/* Logo + name */}
         <button
           type="button"
-          className="flex min-h-[44px] items-center gap-2 text-left"
+          className="flex min-h-[44px] items-center gap-2 text-start"
           onClick={onLogoClick}
         >
           <div className="w-9 h-9 rounded-xl bg-sage-muted/20 flex items-center justify-center">

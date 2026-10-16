@@ -73,16 +73,24 @@ export function Footer() {
       {/* Sleeping cat + credit */}
       <div className="flex flex-col items-center">
         <SleepingCat size={55} className="text-sage-muted/30 mb-2" />
-        <p className="text-[0.94rem] text-chocolate-muted/70 text-center mb-0.5">
-          Cat's Garden · Fès, Maroc
+        <p className="text-[0.94rem] text-chocolate-muted/70 text-center mb-0.5 leading-relaxed">
+          {t.footerBy}{' '}
+          <a
+            href={config.managerInstagramUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-bold text-sage-dark underline underline-offset-2 hover:text-chocolate transition-colors"
+          >
+            {t.footerManager}
+          </a>
         </p>
         <div className="flex gap-1 mb-2">
           <PawPrint size={6} className="text-peach-muted/50" />
           <PawPrint size={5} className="text-sage-muted/50" />
           <PawPrint size={6} className="text-peach-muted/50" />
         </div>
-        <p className="text-[0.94rem] text-chocolate-muted/70 mt-1">
-          Créé par l'équipe{' '}
+        <p className="text-[0.94rem] text-chocolate-muted/70 mt-1 text-center">
+          {t.menuCredit}{' '}
           <a
             href="https://bitaqa-project.vercel.app/fr"
             target="_blank"

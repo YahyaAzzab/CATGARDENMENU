@@ -69,6 +69,7 @@ function MenuApp({ ready, fromSplash }: { ready: boolean; fromSplash: boolean })
                   onSearch={setSearchQuery}
                   onOpenFamily={handleOpenFamily}
                   onOpenItem={setSelectedItem}
+                  spotlightPaused={selectedItem !== null}
                 />
               </main>
               <Footer />

@@ -1,4 +1,4 @@
-export type Locale = 'fr' | 'en';
+export type Locale = 'fr' | 'en' | 'ar';
 
 export interface Translations {
   // Navigation & General
@@ -67,11 +67,15 @@ export interface Translations {
   options: string;
 
   // Footer
+  languageLabel: string;
   followUs: string;
   getDirections: string;
   leaveReview: string;
   contactWhatsApp: string;
   madeWith: string;
+  footerBy: string;
+  footerManager: string;
+  menuCredit: string;
 }
 
 export const translations: Record<Locale, Translations> = {
@@ -132,11 +136,15 @@ export const translations: Record<Locale, Translations> = {
     servingNote: 'Service',
     options: 'Options',
 
+    languageLabel: 'Langue',
     followUs: 'Suivez-nous',
     getDirections: 'Itinéraire',
     leaveReview: 'Avis Google',
     contactWhatsApp: 'WhatsApp',
     madeWith: 'Créé avec ♥ par',
+    footerBy: "Cat's Garden by",
+    footerManager: '@MaitreChocolatierBennis',
+    menuCredit: "Ce menu digital a été créé par l'équipe",
   },
   en: {
     appTitle: "Cat's Garden",
@@ -195,13 +203,91 @@ export const translations: Record<Locale, Translations> = {
     servingNote: 'Serving',
     options: 'Options',
 
+    languageLabel: 'Language',
     followUs: 'Follow us',
     getDirections: 'Directions',
     leaveReview: 'Google Review',
     contactWhatsApp: 'WhatsApp',
     madeWith: 'Made with ♥ by',
+    footerBy: "Cat's Garden by",
+    footerManager: '@MaitreChocolatierBennis',
+    menuCredit: 'This digital menu was created by',
+  },
+  ar: {
+    appTitle: "Cat's Garden",
+    appSubtitle: 'أول مقهى قطط في فاس',
+    menuTitle: 'قائمتنا',
+    allCategories: 'الكل',
+    currency: 'د.م.',
+    priceFormat: (price: number) => `${price} د.م.`,
+    searchPlaceholder: 'ابحث عن طبق…',
+    noResults: 'لا توجد نتائج',
+    itemCount: (count: number) =>
+      count === 1 ? 'طبق واحد' : count === 2 ? 'طبقان' : count <= 10 ? `${count} أطباق` : `${count} طبقًا`,
+
+    splashTagline: 'قهوة وبرانش وحلويات',
+    tapToSkip: 'المس للتخطي',
+
+    tableGreeting: (table: string) => `طاولة ${table}`,
+    welcomeMessage: 'أهلاً بك!',
+
+    heroTitle: 'أهلاً بك في الحديقة',
+    heroSubtitle: 'استرخِ، فالقطط تُحيي الأجواء 🌿',
+
+    filterVegetarian: 'نباتي',
+    filterChocolate: 'شوكولاتة',
+    filterTraditional: 'تقليدي',
+    filterSignature: 'سيغنيتشر',
+    filterPopular: 'الأكثر طلبًا',
+    favoritesTitle: 'المفضلات',
+    backHome: 'الرئيسية',
+    swipeHint: 'اسحب لتغيير القسم',
+
+    tagVegetarian: 'نباتي',
+    tagVegan: 'نباتي صرف',
+    tagChocolate: 'شوكولاتة',
+    tagSpicy: 'حار',
+    tagGlutenFree: 'خالٍ من الغلوتين',
+    tagDairyFree: 'خالٍ من اللاكتوز',
+    tagNutFree: 'خالٍ من المكسرات',
+    tagHot: 'ساخن',
+    tagCold: 'بارد',
+    tagTraditional: 'تقليدي',
+
+    badgeNew: 'جديد',
+    badgeSignature: 'سيغنيتشر',
+    badgePopular: 'الأكثر طلبًا',
+
+    composition: 'المكونات',
+    optionsLabel: 'خيارات',
+    supplementsLabel: 'إضافات',
+    includedLabel: 'مشمول في العرض',
+    closeLabel: 'إغلاق',
+    exhausted: 'نفد',
+
+    included: 'مشمول',
+    supplement: 'إضافة',
+    unavailable: 'غير متوفر',
+    servingNote: 'التقديم',
+    options: 'خيارات',
+
+    languageLabel: 'اللغة',
+    followUs: 'تابعونا',
+    getDirections: 'الطريق',
+    leaveReview: 'رأي على غوغل',
+    contactWhatsApp: 'واتساب',
+    madeWith: 'صُنع بـ ♥ من طرف',
+    footerBy: "Cat's Garden by",
+    footerManager: '@MaitreChocolatierBennis',
+    menuCredit: 'أُنشئت هذه القائمة الرقمية من طرف فريق',
   },
 };
+
+export function pickLabeled(locale: Locale, row: object, base: 'name' | 'label'): string {
+  const suffix = locale === 'en' ? 'En' : locale === 'ar' ? 'Ar' : 'Fr';
+  const record = row as Record<string, string | undefined>;
+  return record[`${base}${suffix}`] || record[`${base}Fr`] || '';
+}
 
 export function getTagLabel(tag: string, locale: Locale): string {
   const key = `tag${tag.charAt(0).toUpperCase() + tag.slice(1)}` as keyof Translations;

@@ -147,27 +147,29 @@ export const categories: Category[] = [
 const brunchHotDrinkChoice = {
   labelFr: 'Boisson chaude au choix',
   labelEn: 'Hot drink of your choice',
+  labelAr: 'مشروب ساخن من اختيارك',
   options: [
-    { nameFr: 'Café', nameEn: 'Coffee' },
-    { nameFr: 'Thé', nameEn: 'Tea' },
-    { nameFr: 'Verveine', nameEn: 'Verbena' },
-    { nameFr: 'Chocolat chaud', nameEn: 'Hot chocolate' },
+    { nameFr: 'Café', nameEn: 'Coffee', nameAr: 'قهوة' },
+    { nameFr: 'Thé', nameEn: 'Tea', nameAr: 'شاي' },
+    { nameFr: 'Verveine', nameEn: 'Verbena', nameAr: 'لويزة' },
+    { nameFr: 'Chocolat chaud', nameEn: 'Hot chocolate', nameAr: 'شوكولاتة ساخنة' },
   ],
 };
 
 const brunchJuiceChoice = {
   labelFr: 'Jus au choix',
   labelEn: 'Juice of your choice',
+  labelAr: 'عصير من اختيارك',
   options: [
-    { nameFr: 'Orange', nameEn: 'Orange' },
-    { nameFr: 'Carotte', nameEn: 'Carrot' },
-    { nameFr: 'Banane', nameEn: 'Banana' },
+    { nameFr: 'Orange', nameEn: 'Orange', nameAr: 'برتقال' },
+    { nameFr: 'Carotte', nameEn: 'Carrot', nameAr: 'جزر' },
+    { nameFr: 'Banane', nameEn: 'Banana', nameAr: 'موز' },
   ],
 };
 
 // Common supplements
-const chantillySupplement = { nameFr: 'Chantilly', nameEn: 'Whipped cream', price: 5 };
-const sauceFromagere = { nameFr: 'Sauce fromagère spéciale', nameEn: 'Special cheese sauce', price: 15 };
+const chantillySupplement = { nameFr: 'Chantilly', nameEn: 'Whipped cream', nameAr: 'كريمة شانتيي', price: 5 };
+const sauceFromagere = { nameFr: 'Sauce fromagère spéciale', nameEn: 'Special cheese sauce', nameAr: 'صلصة جبن خاصة', price: 15 };
 
 // ─── MENU ITEMS ──────────────────────────────────────────────────
 export const menuItems: MenuItem[] = [
@@ -199,9 +201,9 @@ export const menuItems: MenuItem[] = [
     badges: [],
     available: true,
     options: [
-      { nameFr: 'Nature', nameEn: 'Plain', extraPrice: 0 },
-      { nameFr: 'Fromage', nameEn: 'Cheese', extraPrice: 0 },
-      { nameFr: 'Charcuterie', nameEn: 'Cold cuts', extraPrice: 0 },
+      { nameFr: 'Nature', nameEn: 'Plain', nameAr: 'سادة', extraPrice: 0 },
+      { nameFr: 'Fromage', nameEn: 'Cheese', nameAr: 'جبن', extraPrice: 0 },
+      { nameFr: 'Charcuterie', nameEn: 'Cold cuts', nameAr: 'شرائح باردة', extraPrice: 0 },
     ],
     includedChoices: [brunchHotDrinkChoice, brunchJuiceChoice],
   },
@@ -533,9 +535,9 @@ export const menuItems: MenuItem[] = [
     badges: [],
     available: true,
     options: [
-      { nameFr: 'Vanille', nameEn: 'Vanilla', extraPrice: 0 },
-      { nameFr: 'Caramel', nameEn: 'Caramel', extraPrice: 0 },
-      { nameFr: 'Chocolat', nameEn: 'Chocolate', extraPrice: 0 },
+      { nameFr: 'Vanille', nameEn: 'Vanilla', nameAr: 'فانيلا', extraPrice: 0 },
+      { nameFr: 'Caramel', nameEn: 'Caramel', nameAr: 'كراميل', extraPrice: 0 },
+      { nameFr: 'Chocolat', nameEn: 'Chocolate', nameAr: 'شوكولاتة', extraPrice: 0 },
     ],
     supplements: [chantillySupplement],
   },
@@ -633,9 +635,9 @@ export const menuItems: MenuItem[] = [
     badges: [],
     available: true,
     options: [
-      { nameFr: 'Citron', nameEn: 'Lemon', extraPrice: 0 },
-      { nameFr: 'Pêche', nameEn: 'Peach', extraPrice: 0 },
-      { nameFr: 'Framboise', nameEn: 'Raspberry', extraPrice: 0 },
+      { nameFr: 'Citron', nameEn: 'Lemon', nameAr: 'ليمون', extraPrice: 0 },
+      { nameFr: 'Pêche', nameEn: 'Peach', nameAr: 'خوخ', extraPrice: 0 },
+      { nameFr: 'Framboise', nameEn: 'Raspberry', nameAr: 'توت العليق', extraPrice: 0 },
     ],
   },
 
@@ -1412,9 +1414,9 @@ export const menuItems: MenuItem[] = [
     badges: [],
     available: true,
     options: [
-      { nameFr: 'Vanille', nameEn: 'Vanilla', extraPrice: 0 },
-      { nameFr: 'Chocolat', nameEn: 'Chocolate', extraPrice: 0 },
-      { nameFr: 'Fruits des bois', nameEn: 'Wild berries', extraPrice: 0 },
+      { nameFr: 'Vanille', nameEn: 'Vanilla', nameAr: 'فانيلا', extraPrice: 0 },
+      { nameFr: 'Chocolat', nameEn: 'Chocolate', nameAr: 'شوكولاتة', extraPrice: 0 },
+      { nameFr: 'Fruits des bois', nameEn: 'Wild berries', nameAr: 'فواكه الغابة', extraPrice: 0 },
     ],
     supplements: [chantillySupplement],
   },

@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import type { MenuItem } from '../data/types';
 import type { FamilyId } from '../data/families';
@@ -7,6 +8,7 @@ import {
   isBrunchHours,
 } from '../data/families';
 import { menuItems } from '../data/menu';
+import { getSpotlightItems } from '../lib/daypart';
 import { matchesSearch } from '../lib/filters';
 import { useI18n } from '../i18n/I18nContext';
 import { SearchBar } from './SearchBar';
@@ -23,6 +25,7 @@ interface HomeViewProps {
   onSearch: (q: string) => void;
   onOpenFamily: (id: FamilyId) => void;
   onOpenItem: (item: MenuItem) => void;
+  spotlightPaused?: boolean;
 }
 
 export function HomeView({
@@ -33,16 +36,21 @@ export function HomeView({
   onSearch,
   onOpenFamily,
   onOpenItem,
+  spotlightPaused = false,
 }: HomeViewProps) {
   const { t } = useI18n();
   const reduce = useReducedMotion();
   const brunchTime = isBrunchHours();
   const ordered = getOrderedFamilies(brunchTime);
   const headerDelay = fromSplash ? ordered.length * cascadeStagger + 0.08 : 0.12;
+  const [now, setNow] = useState(() => new Date());
 
-  const favorites = menuItems.filter(
-    (item) => item.badges.includes('signature') || item.badges.includes('popular')
-  );
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(new Date()), 60_000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  const favorites = getSpotlightItems(now);
 
   const searchResults = searchQuery
     ? menuItems.filter((item) => matchesSearch(item, searchQuery))
@@ -119,6 +127,7 @@ export function HomeView({
           <FavoritesCarousel
             items={favorites}
             onTap={onOpenItem}
+            suspended={spotlightPaused}
             delay={fromSplash ? headerDelay + 0.08 : 0.2}
           />
         </>

@@ -25,11 +25,10 @@ export function FamilyCard({
   fromSplash,
   onSelect,
 }: FamilyCardProps) {
-  const { localized, t } = useI18n();
+  const { localized, t, locale } = useI18n();
   const reduce = useReducedMotion();
-  const nameFr = family.nameFr;
-  const nameEn = family.nameEn;
-  const isBilingual = nameFr !== nameEn;
+  const title = locale === 'ar' ? localized(family, 'name') : family.nameFr;
+  const isBilingual = locale !== 'ar' && family.nameFr !== family.nameEn;
 
   const minH = featured
     ? 'min-h-[108px]'
@@ -43,7 +42,7 @@ export function FamilyCard({
     <motion.button
       type="button"
       onClick={() => onSelect(family.id)}
-      className={`relative flex w-full flex-col self-start overflow-hidden rounded-2xl text-left ${minH} ${
+      className={`relative flex w-full flex-col self-start overflow-hidden rounded-2xl text-start ${minH} ${
         featured ? 'col-span-2' : ''
       } shadow-[var(--shadow-card)] border border-white/50`}
       style={{ fontFamily: 'var(--font-body)' }}
@@ -75,10 +74,10 @@ export function FamilyCard({
           }`}
           style={{ fontFamily: 'var(--font-display)' }}
         >
-          {nameFr}
+          {title}
         </h3>
         {isBilingual && (
-          <p className="text-[0.94rem] leading-snug text-chocolate-muted">{nameEn}</p>
+          <p className="text-[0.94rem] leading-snug text-chocolate-muted">{family.nameEn}</p>
         )}
         <p className="mt-0.5 text-[0.94rem] font-semibold text-sage-dark">
           {t.itemCount(count)}

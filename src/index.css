@@ -1,7 +1,7 @@
 /* ─── Google Fonts ─────────────────────────────────────────────── */
 /* Libre Baskerville for display titles: elegant, editorial feel */
 /* Nunito for body: rounded, friendly, highly legible on mobile */
-@import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Nunito:ital,wght@0,300..1000;1,300..1000&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Nunito:ital,wght@0,300..1000;1,300..1000&display=swap');
 
 @import "tailwindcss";
 
@@ -278,8 +278,21 @@ input, textarea, select {
   background: white;
 }
 
+[dir='rtl'] {
+  --font-display: 'Cairo', 'Nunito', sans-serif;
+  --font-body: 'Cairo', 'Nunito', sans-serif;
+}
+
+[dir='rtl'] .family-visual {
+  transform: scaleX(-1);
+}
+
+[dir='rtl'] .rtl-mirror {
+  transform: scaleX(-1);
+}
+
 .lang-switch button {
-  padding: 4px 14px;
+  padding: 4px 11px;
   font-size: 0.94rem;
   font-weight: 700;
   font-family: var(--font-body);
@@ -316,7 +329,7 @@ input, textarea, select {
   background: var(--color-cream-dark);
   padding: var(--space-sm) var(--space-md);
   border-radius: var(--radius-md);
-  border-left: 3px solid var(--color-sage-muted);
+  border-inline-start: 3px solid var(--color-sage-muted);
   margin-top: var(--space-md);
 }
 

@@ -19,13 +19,15 @@ export interface IncludedChoice {
   /** e.g. "Boisson chaude au choix" */
   labelFr: string;
   labelEn: string;
+  labelAr?: string;
   /** Available options for this choice */
-  options: { nameFr: string; nameEn: string }[];
+  options: { nameFr: string; nameEn: string; nameAr?: string }[];
 }
 
 export interface ItemOption {
   nameFr: string;
   nameEn: string;
+  nameAr?: string;
   /** Extra price in DH, 0 if no extra cost */
   extraPrice: number;
 }
@@ -33,6 +35,7 @@ export interface ItemOption {
 export interface Supplement {
   nameFr: string;
   nameEn: string;
+  nameAr?: string;
   price: number;
 }
 
