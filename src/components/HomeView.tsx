@@ -104,9 +104,9 @@ export function HomeView({
       ) : (
         <>
           <div className="relative mt-2">
-            <div className="grid grid-cols-2 items-start gap-2.5">
+            <div className="grid grid-cols-2 items-stretch gap-2.5">
               {ordered.map((family, index) => {
-                const featured = brunchTime && family.id === 'breakfast';
+                const featured = family.id === 'breakfast';
                 return (
                   <FamilyCard
                     key={family.id}

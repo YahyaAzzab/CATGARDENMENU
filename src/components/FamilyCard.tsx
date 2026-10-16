@@ -42,7 +42,7 @@ export function FamilyCard({
     <motion.button
       type="button"
       onClick={() => onSelect(family.id)}
-      className={`relative flex w-full flex-col self-start overflow-hidden rounded-2xl text-start ${minH} ${
+      className={`relative flex h-full w-full flex-col overflow-hidden rounded-2xl text-start ${minH} ${
         featured ? 'col-span-2' : ''
       } shadow-[var(--shadow-card)] border border-white/50`}
       style={{ fontFamily: 'var(--font-body)' }}
