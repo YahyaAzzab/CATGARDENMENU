@@ -4,7 +4,7 @@ import { I18nProvider } from './i18n/I18nContext';
 import type { MenuItem } from './data/types';
 import type { FamilyId } from './data/families';
 
-import { SplashScreen } from './components/SplashScreen';
+import { SplashMark, SplashVeil } from './components/SplashScreen';
 import { Header } from './components/Header';
 import { HomeView } from './components/HomeView';
 import { FamilyView } from './components/FamilyView';
@@ -16,7 +16,15 @@ import { irisEase } from './motion';
 
 import './index.css';
 
-function MenuApp({ ready, fromSplash }: { ready: boolean; fromSplash: boolean }) {
+function MenuApp({
+  ready,
+  fromSplash,
+  showMark,
+}: {
+  ready: boolean;
+  fromSplash: boolean;
+  showMark: boolean;
+}) {
   const { familyId, tableNumber, openFamily, goHome, replaceFamily } = useMenuRoute();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
@@ -32,7 +40,7 @@ function MenuApp({ ready, fromSplash }: { ready: boolean; fromSplash: boolean })
         <PawPrint size={120} className="text-chocolate" />
       </div>
 
-      <Header onLogoClick={goHome} />
+      <Header onLogoClick={goHome} showMark={showMark} />
 
       <LayoutGroup>
         <AnimatePresence mode="sync" initial={false}>
@@ -84,21 +92,21 @@ function MenuApp({ ready, fromSplash }: { ready: boolean; fromSplash: boolean })
 }
 
 export default function App() {
-  const [splashDone, setSplashDone] = useState(false);
   const skipSplash =
     typeof window !== 'undefined' && sessionStorage.getItem('catsgarden_splash') === '1';
-
-  const showSplash = !skipSplash && !splashDone;
-  const fromSplash = !skipSplash && splashDone;
+  const [phase, setPhase] = useState<'splash' | 'fly' | 'done'>(skipSplash ? 'done' : 'splash');
 
   return (
     <I18nProvider>
-      {showSplash && <SplashScreen onComplete={() => setSplashDone(true)} />}
+      {phase !== 'done' && (
+        <SplashMark fly={phase === 'fly'} onFlyEnd={() => setPhase('done')} />
+      )}
+      {phase === 'splash' && <SplashVeil onDone={() => setPhase('fly')} />}
       <div
         className="app-content"
-        style={showSplash ? { visibility: 'hidden' } : undefined}
+        style={phase === 'splash' ? { visibility: 'hidden', pointerEvents: 'none' } : undefined}
       >
-        <MenuApp ready={!showSplash} fromSplash={fromSplash} />
+        <MenuApp ready={phase !== 'splash'} fromSplash={phase !== 'splash' && !skipSplash} showMark={phase === 'done'} />
       </div>
     </I18nProvider>
   );
