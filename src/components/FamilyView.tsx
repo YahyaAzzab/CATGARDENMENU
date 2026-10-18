@@ -9,11 +9,10 @@ import {
   isCompactDrinkItem,
   type FamilyId,
 } from '../data/families';
-import { matchesFilters, matchesSearch } from '../lib/filters';
+import { matchesSearch } from '../lib/filters';
 import { useI18n } from '../i18n/I18nContext';
 import { FamilyIllustration } from './FamilyIllustration';
 import { CategoryNav } from './CategoryNav';
-import { FilterChips, type FilterKey } from './FilterChips';
 import { MenuItemCard } from './MenuItemCard';
 import { irisEase } from '../motion';
 
@@ -35,7 +34,6 @@ export function FamilyView({
   const { t, localized, locale } = useI18n();
   const reduce = useReducedMotion();
   const family = getFamilyById(familyId);
-  const [activeFilters, setActiveFilters] = useState<Set<FilterKey>>(new Set());
   const [scrollspyCategory, setScrollspyCategory] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
@@ -47,7 +45,6 @@ export function FamilyView({
   useEffect(() => {
     setActiveCategory(null);
     setScrollspyCategory(sections[0]?.category.id ?? null);
-    setActiveFilters(new Set());
   }, [familyId, sections]);
 
   useEffect(() => {
@@ -72,21 +69,10 @@ export function FamilyView({
 
   if (!family) return null;
 
-  const handleFilterToggle = (filter: FilterKey) => {
-    setActiveFilters((prev) => {
-      const next = new Set(prev);
-      if (next.has(filter)) next.delete(filter);
-      else next.add(filter);
-      return next;
-    });
-  };
-
   const filteredSections = sections
     .map((section) => ({
       ...section,
-      items: section.items.filter(
-        (item) => matchesSearch(item, searchQuery) && matchesFilters(item, activeFilters)
-      ),
+      items: section.items.filter((item) => matchesSearch(item, searchQuery)),
     }))
     .filter((s) => s.items.length > 0);
 
@@ -169,10 +155,6 @@ export function FamilyView({
             fadeRight
             stickyTopClass="top-[52px]"
           />
-        </div>
-
-        <div className="mt-2">
-          <FilterChips activeFilters={activeFilters} onToggle={handleFilterToggle} />
         </div>
 
         {displayed.length === 0 && (

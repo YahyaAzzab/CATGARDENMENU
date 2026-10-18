@@ -1,27 +1,5 @@
 import type { MenuItem } from '../data/types';
-import type { FilterKey } from '../components/FilterChips';
 import { arCopy } from '../i18n/arMenu';
-
-export function matchesFilters(item: MenuItem, filters: Set<FilterKey>): boolean {
-  if (filters.size === 0) return true;
-  for (const f of filters) {
-    switch (f) {
-      case 'vegetarian':
-        if (!item.tags.includes('vegetarian')) return false;
-        break;
-      case 'chocolate':
-        if (!item.tags.includes('chocolate')) return false;
-        break;
-      case 'signature':
-        if (!item.badges.includes('signature')) return false;
-        break;
-      case 'popular':
-        if (!item.badges.includes('popular')) return false;
-        break;
-    }
-  }
-  return true;
-}
 
 export function matchesSearch(item: MenuItem, query: string): boolean {
   if (!query) return true;
