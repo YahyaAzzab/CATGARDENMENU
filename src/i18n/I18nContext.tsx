@@ -19,7 +19,8 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     document.documentElement.lang = locale;
     document.documentElement.dir = locale === 'ar' ? 'rtl' : 'ltr';
-  }, [locale]);
+    document.title = t.pageTitle;
+  }, [locale, t.pageTitle]);
 
   const localized = useCallback(
     <T extends object>(obj: T, fieldBase: string): string => {

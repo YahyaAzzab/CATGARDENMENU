@@ -151,9 +151,6 @@ export function FamilyView({
             >
               {name}
             </h2>
-            {locale === 'fr' && family.nameFr !== family.nameEn && (
-              <p className="text-[0.94rem] text-white/90">{family.nameEn}</p>
-            )}
           </div>
         </div>
       </div>

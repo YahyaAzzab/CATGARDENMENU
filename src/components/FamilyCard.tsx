@@ -25,10 +25,9 @@ export function FamilyCard({
   fromSplash,
   onSelect,
 }: FamilyCardProps) {
-  const { localized, t, locale } = useI18n();
+  const { localized, t } = useI18n();
   const reduce = useReducedMotion();
-  const title = locale === 'ar' ? localized(family, 'name') : family.nameFr;
-  const isBilingual = locale !== 'ar' && family.nameFr !== family.nameEn;
+  const title = localized(family, 'name');
 
   const minH = featured
     ? 'min-h-[108px]'
@@ -76,9 +75,6 @@ export function FamilyCard({
         >
           {title}
         </h3>
-        {isBilingual && (
-          <p className="text-[0.94rem] leading-snug text-chocolate-muted">{family.nameEn}</p>
-        )}
         <p className="mt-0.5 text-[0.94rem] font-semibold text-sage-dark">
           {t.itemCount(count)}
         </p>

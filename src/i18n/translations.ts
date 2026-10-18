@@ -3,6 +3,7 @@ export type Locale = 'fr' | 'en' | 'ar';
 export interface Translations {
   // Navigation & General
   appTitle: string;
+  pageTitle: string;
   appSubtitle: string;
   menuTitle: string;
   allCategories: string;
@@ -81,6 +82,7 @@ export interface Translations {
 export const translations: Record<Locale, Translations> = {
   fr: {
     appTitle: "Cat's Garden",
+    pageTitle: "Cat's Garden · Menu | Café à chats – Fès",
     appSubtitle: 'Le premier café à chats de Fès',
     menuTitle: 'Notre carte',
     allCategories: 'Tout',
@@ -142,12 +144,13 @@ export const translations: Record<Locale, Translations> = {
     leaveReview: 'Avis Google',
     contactWhatsApp: 'WhatsApp',
     madeWith: 'Créé avec ♥ par',
-    footerBy: "Cat's Garden by",
+    footerBy: "Cat's Garden par",
     footerManager: '@MaitreChocolatierBennis',
     menuCredit: "Ce menu digital a été créé par l'équipe",
   },
   en: {
     appTitle: "Cat's Garden",
+    pageTitle: "Cat's Garden · Menu | Cat café in Fez",
     appSubtitle: "Fez's first cat café",
     menuTitle: 'Our Menu',
     allCategories: 'All',
@@ -215,6 +218,7 @@ export const translations: Record<Locale, Translations> = {
   },
   ar: {
     appTitle: "Cat's Garden",
+    pageTitle: "Cat's Garden · القائمة | مقهى قطط في فاس",
     appSubtitle: 'أول مقهى قطط في فاس',
     menuTitle: 'قائمتنا',
     allCategories: 'الكل',
@@ -277,7 +281,7 @@ export const translations: Record<Locale, Translations> = {
     leaveReview: 'رأي على غوغل',
     contactWhatsApp: 'واتساب',
     madeWith: 'صُنع بـ ♥ من طرف',
-    footerBy: "Cat's Garden by",
+    footerBy: "Cat's Garden من طرف",
     footerManager: '@MaitreChocolatierBennis',
     menuCredit: 'أُنشئت هذه القائمة الرقمية من طرف فريق',
   },

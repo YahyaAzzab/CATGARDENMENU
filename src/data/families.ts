@@ -14,7 +14,7 @@ export interface Family {
 export const families: Family[] = [
   {
     id: 'breakfast',
-    nameFr: 'Breakfast & Brunch',
+    nameFr: 'Petit-déjeuner & Brunch',
     nameEn: 'Breakfast & Brunch',
     categoryIds: ['brunch', 'a-la-carte'],
     accent: 'peach',
@@ -36,7 +36,7 @@ export const families: Family[] = [
   {
     id: 'sweet',
     nameFr: 'Douceurs',
-    nameEn: 'Sweet',
+    nameEn: 'Sweets',
     categoryIds: ['pancakes', 'crepes-sucrees', 'gaufres', 'meow-gelato', 'gateaux-desserts'],
     accent: 'rose',
   },
