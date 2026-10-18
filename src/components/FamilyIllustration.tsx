@@ -32,12 +32,15 @@ export function FamilyIllustration({
   familyId,
   variant = 'card',
   className = '',
+  priority = false,
 }: {
   familyId: FamilyId;
   variant?: 'card' | 'header';
   className?: string;
+  priority?: boolean;
 }) {
   const conf = art[familyId];
+  const eager = priority || variant === 'header';
   const frame =
     variant === 'header'
       ? 'absolute inset-0 h-full w-full object-cover object-[72%_center]'
@@ -55,6 +58,9 @@ export function FamilyIllustration({
       <img
         src={conf.image}
         alt=""
+        decoding="async"
+        fetchPriority={eager ? 'high' : 'low'}
+        loading={eager ? 'eager' : 'lazy'}
         className={frame}
       />
       <div className={`absolute inset-0 ${wash}`} />

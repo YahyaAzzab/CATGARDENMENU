@@ -3,6 +3,7 @@ import type { Family } from '../data/families';
 import { useI18n } from '../i18n/I18nContext';
 import { FamilyIllustration } from './FamilyIllustration';
 import { cardSpring, cascadeStagger } from '../motion';
+import { prefetchMenuScreens } from '../lib/loadScreens';
 
 interface FamilyCardProps {
   family: Family;
@@ -40,6 +41,7 @@ export function FamilyCard({
   return (
     <motion.button
       type="button"
+      onPointerDown={() => prefetchMenuScreens()}
       onClick={() => onSelect(family.id)}
       className={`relative flex h-full w-full flex-col overflow-hidden rounded-2xl text-start ${minH} ${
         featured ? 'col-span-2' : ''
@@ -63,7 +65,7 @@ export function FamilyCard({
         className="absolute inset-0"
         transition={reduce ? { duration: 0 } : { duration: 0.55, ease: [0.4, 0, 0.2, 1] }}
       >
-        <FamilyIllustration familyId={family.id} />
+        <FamilyIllustration familyId={family.id} priority={index < 2} />
       </motion.div>
 
       <div className={`relative z-10 mt-auto p-3 ${featured ? 'max-w-[62%]' : 'max-w-[68%]'}`}>

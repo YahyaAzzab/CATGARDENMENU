@@ -15,11 +15,11 @@ export function SplashVeil({ onDone }: { onDone: () => void }) {
       onDone();
     };
     if (reduce) {
-      const timer = window.setTimeout(finish, 1100);
+      const timer = window.setTimeout(finish, 400);
       return () => clearTimeout(timer);
     }
-    const show = window.setTimeout(() => setShown(true), 280);
-    const end = window.setTimeout(finish, 2900);
+    const show = window.setTimeout(() => setShown(true), 120);
+    const end = window.setTimeout(finish, 1300);
     return () => {
       clearTimeout(show);
       clearTimeout(end);

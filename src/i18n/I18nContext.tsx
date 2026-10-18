@@ -12,6 +12,18 @@ interface I18nContextType {
 
 const I18nContext = createContext<I18nContextType | null>(null);
 
+const CAIRO_HREF =
+  'https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap';
+
+function ensureCairo() {
+  if (document.querySelector('link[data-font="cairo"]')) return;
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = CAIRO_HREF;
+  link.dataset.font = 'cairo';
+  document.head.appendChild(link);
+}
+
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [locale, setLocale] = useState<Locale>('fr');
   const t = translations[locale];
@@ -20,6 +32,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     document.documentElement.lang = locale;
     document.documentElement.dir = locale === 'ar' ? 'rtl' : 'ltr';
     document.title = t.pageTitle;
+    if (locale === 'ar') ensureCairo();
   }, [locale, t.pageTitle]);
 
   const localized = useCallback(

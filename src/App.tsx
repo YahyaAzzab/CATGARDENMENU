@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState, type ComponentProps } from 'react';
 import { AnimatePresence, LayoutGroup, motion } from 'framer-motion';
 import { I18nProvider } from './i18n/I18nContext';
 import type { MenuItem } from './data/types';
@@ -7,15 +7,23 @@ import type { FamilyId } from './data/families';
 import { SplashMark, SplashVeil } from './components/SplashScreen';
 import { Header } from './components/Header';
 import { HomeView } from './components/HomeView';
-import { FamilyView } from './components/FamilyView';
-import { ProductBottomSheet } from './components/ProductBottomSheet';
 import { Footer } from './components/Footer';
 import { BackToTop } from './components/BackToTop';
 import { PawPrint } from './components/Icons';
 import { useMenuRoute } from './hooks/useMenuRoute';
 import { irisEase } from './motion';
-
+import {
+  getFamilyView,
+  getProductSheet,
+  loadFamilyView,
+  loadProductSheet,
+  prefetchMenuScreens,
+} from './lib/loadScreens';
 import './index.css';
+
+type FamilyViewComponent = ComponentProps<
+  NonNullable<ReturnType<typeof getFamilyView>>
+>;
 
 function MenuApp({
   ready,
@@ -29,6 +37,18 @@ function MenuApp({
   const { familyId, tableNumber, openFamily, goHome, replaceFamily } = useMenuRoute();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+
+  useEffect(() => {
+    if (!ready) return;
+    const run = () => prefetchMenuScreens();
+    const idle = window.requestIdleCallback;
+    if (idle) {
+      const id = idle(run, { timeout: 1200 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const id = window.setTimeout(run, 400);
+    return () => window.clearTimeout(id);
+  }, [ready]);
 
   const handleOpenFamily = (id: FamilyId) => {
     setSearchQuery('');
@@ -53,7 +73,7 @@ function MenuApp({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.28, ease: irisEase }}
             >
-              <FamilyView
+              <DeferredFamily
                 familyId={familyId}
                 searchQuery={searchQuery}
                 onBack={goHome}
@@ -87,10 +107,52 @@ function MenuApp({
         </AnimatePresence>
       </LayoutGroup>
 
-      <ProductBottomSheet item={selectedItem} onClose={() => setSelectedItem(null)} />
+      <DeferredSheet item={selectedItem} onClose={() => setSelectedItem(null)} />
       <BackToTop hidden={selectedItem !== null} />
     </div>
   );
+}
+
+function DeferredFamily(props: FamilyViewComponent) {
+  const [View, setView] = useState(() => getFamilyView());
+
+  useEffect(() => {
+    if (View) return;
+    let active = true;
+    loadFamilyView().then((Comp) => {
+      if (active) setView(() => Comp);
+    });
+    return () => {
+      active = false;
+    };
+  }, [View]);
+
+  if (!View) return <div className="min-h-[70vh]" />;
+  return <View {...props} />;
+}
+
+function DeferredSheet({
+  item,
+  onClose,
+}: {
+  item: MenuItem | null;
+  onClose: () => void;
+}) {
+  const [Sheet, setSheet] = useState(() => getProductSheet());
+
+  useEffect(() => {
+    if (Sheet) return;
+    let active = true;
+    loadProductSheet().then((Comp) => {
+      if (active) setSheet(() => Comp);
+    });
+    return () => {
+      active = false;
+    };
+  }, [Sheet]);
+
+  if (!Sheet) return null;
+  return <Sheet item={item} onClose={onClose} />;
 }
 
 export default function App() {

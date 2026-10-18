@@ -6,7 +6,7 @@ import { pickLabeled, type Locale } from '../i18n/translations';
 import { Badge, Chip } from './UIComponents';
 import { getCategoryById } from '../data/menu';
 import { CategoryIcon } from './Icons';
-import { getItemImage } from '../lib/itemImages';
+import { useItemImage } from '../lib/itemImages';
 
 interface BottomSheetProps {
   item: MenuItem | null;
@@ -89,7 +89,8 @@ function SheetContent({ item, locale, t, localized }: {
   const priceNote = localized(item, 'priceNote');
   const servingNote = localized(item, 'servingNote');
   const category = getCategoryById(item.categoryId);
-  const image = item.image ?? getItemImage(item.id);
+  const loadedImage = useItemImage(item.id, !item.image);
+  const image = item.image ?? loadedImage;
 
   const visibleTags = item.tags.filter((tag) => !['hot', 'cold'].includes(tag));
 
@@ -98,7 +99,7 @@ function SheetContent({ item, locale, t, localized }: {
       {/* Placeholder image */}
       <div className="relative mb-4 h-52 w-full overflow-hidden rounded-2xl bg-[#FDF6EC]">
         {image ? (
-          <img src={image} alt="" className="h-full w-full object-contain" />
+          <img src={image} alt="" decoding="async" fetchPriority="high" className="h-full w-full object-contain" />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center opacity-[0.12]">
             {category && <CategoryIcon icon={category.icon} size={64} className="text-sage" />}

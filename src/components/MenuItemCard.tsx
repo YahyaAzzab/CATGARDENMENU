@@ -6,7 +6,7 @@ import { pickLabeled } from '../i18n/translations';
 import { Badge } from './UIComponents';
 import { getCategoryById } from '../data/menu';
 import { CategoryIcon } from './Icons';
-import { getItemImage } from '../lib/itemImages';
+import { useItemImage } from '../lib/itemImages';
 
 interface MenuItemCardProps {
   item: MenuItem;
@@ -34,12 +34,14 @@ export function MenuItemCard({ item, onTap, compact = false }: MenuItemCardProps
   const cardRef = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
   const isInView = useInView(cardRef, { once: true, margin: '-30px' });
+  const nearView = useInView(cardRef, { once: true, margin: '360px 0px' });
 
   const name = localized(item, 'name');
   const description = localized(item, 'description');
   const priceNote = localized(item, 'priceNote');
   const category = getCategoryById(item.categoryId);
-  const image = item.image ?? getItemImage(item.id);
+  const loadedImage = useItemImage(item.id, nearView && !item.image);
+  const image = item.image ?? loadedImage;
 
   const handleTap = (e: React.MouseEvent | React.TouchEvent) => {
     if (cardRef.current) {

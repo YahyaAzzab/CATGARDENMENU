@@ -1,8 +1,5 @@
-/* ─── Google Fonts ─────────────────────────────────────────────── */
-/* Libre Baskerville for display titles: elegant, editorial feel */
-/* Nunito for body: rounded, friendly, highly legible on mobile */
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Nunito:ital,wght@0,300..1000;1,300..1000&display=swap');
-
+/* Fonts load from index.html so this file is not blocked on a third-party request. */
+/* Cairo is added only when Arabic is selected. */
 @import "tailwindcss";
 
 /* ─── Cat's Garden Design System ──────────────────────────────── */

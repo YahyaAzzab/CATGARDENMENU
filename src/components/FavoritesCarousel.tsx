@@ -4,7 +4,7 @@ import type { MenuItem } from '../data/types';
 import { useI18n } from '../i18n/I18nContext';
 import { getCategoryById } from '../data/menu';
 import { CategoryIcon } from './Icons';
-import { getItemImage } from '../lib/itemImages';
+import { useItemImage } from '../lib/itemImages';
 import { cardSpring } from '../motion';
 
 interface FavoritesCarouselProps {
@@ -114,8 +114,6 @@ export function FavoritesCarousel({
 
   const renderCard = (item: MenuItem, copy: number) => {
     const name = localized(item, 'name');
-    const category = getCategoryById(item.categoryId);
-    const image = item.image ?? getItemImage(item.id);
     return (
       <button
         key={`${item.id}-${copy}`}
@@ -130,13 +128,7 @@ export function FavoritesCarousel({
         dir={locale === 'ar' ? 'rtl' : undefined}
         className="flex w-[168px] flex-shrink-0 flex-col rounded-2xl bg-white text-start shadow-[var(--shadow-card)] border border-sage-muted/15 min-h-[44px] overflow-hidden"
       >
-        <div className="flex h-[96px] items-center justify-center bg-[#FDF6EC]">
-          {image ? (
-            <img src={image} alt="" draggable={false} loading="lazy" decoding="async" className="h-full w-full object-cover" />
-          ) : (
-            category && <CategoryIcon icon={category.icon} size={32} className="text-sage-dark/45" />
-          )}
-        </div>
+        <FavoriteImage item={item} />
         <div className="p-2.5">
           <p
             className="text-[0.94rem] font-bold leading-snug text-chocolate line-clamp-2"
@@ -187,5 +179,28 @@ export function FavoritesCarousel({
         </div>
       </div>
     </motion.section>
+  );
+}
+
+function FavoriteImage({ item }: { item: MenuItem }) {
+  const loaded = useItemImage(item.id, !item.image);
+  const image = item.image ?? loaded;
+  const category = getCategoryById(item.categoryId);
+
+  return (
+    <div className="flex h-[96px] items-center justify-center bg-[#FDF6EC]">
+      {image ? (
+        <img
+          src={image}
+          alt=""
+          draggable={false}
+          loading="lazy"
+          decoding="async"
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        category && <CategoryIcon icon={category.icon} size={32} className="text-sage-dark/45" />
+      )}
+    </div>
   );
 }
