@@ -33,6 +33,7 @@ export interface Translations {
   filterPopular: string;
   favoritesTitle: string;
   backHome: string;
+  backToTop: string;
   swipeHint: string;
 
   // Tags
@@ -108,6 +109,7 @@ export const translations: Record<Locale, Translations> = {
     filterPopular: 'Populaire',
     favoritesTitle: 'Coups de cœur',
     backHome: 'Accueil',
+    backToTop: 'Remonter en haut',
     swipeHint: 'Glissez pour changer de famille',
 
     tagVegetarian: 'Végétarien',
@@ -176,6 +178,7 @@ export const translations: Record<Locale, Translations> = {
     filterPopular: 'Popular',
     favoritesTitle: 'Staff picks',
     backHome: 'Home',
+    backToTop: 'Back to top',
     swipeHint: 'Swipe to see another family',
 
     tagVegetarian: 'Vegetarian',
@@ -245,6 +248,7 @@ export const translations: Record<Locale, Translations> = {
     filterPopular: 'الأكثر طلبًا',
     favoritesTitle: 'المفضلات',
     backHome: 'الرئيسية',
+    backToTop: 'العودة إلى الأعلى',
     swipeHint: 'اسحب لتغيير القسم',
 
     tagVegetarian: 'نباتي',

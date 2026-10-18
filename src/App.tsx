@@ -10,6 +10,7 @@ import { HomeView } from './components/HomeView';
 import { FamilyView } from './components/FamilyView';
 import { ProductBottomSheet } from './components/ProductBottomSheet';
 import { Footer } from './components/Footer';
+import { BackToTop } from './components/BackToTop';
 import { PawPrint } from './components/Icons';
 import { useMenuRoute } from './hooks/useMenuRoute';
 import { irisEase } from './motion';
@@ -87,6 +88,7 @@ function MenuApp({
       </LayoutGroup>
 
       <ProductBottomSheet item={selectedItem} onClose={() => setSelectedItem(null)} />
+      <BackToTop hidden={selectedItem !== null} />
     </div>
   );
 }
