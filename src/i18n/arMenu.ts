@@ -172,7 +172,6 @@ export const arCopy: Record<string, ArCopy> = {
   'gaufre-fruits-nutella': {
     name: 'غوفر فواكه ونوتيلا',
     description: 'غوفر بالفواكه الطرية ونوتيلا',
-    priceNote: 'السعر قيد التأكيد',
   },
 
   milkshake: { name: 'ميلك شيك', description: 'ميلك شيك كريمي' },
@@ -213,17 +212,14 @@ export const arCopy: Record<string, ArCopy> = {
   'burger-catcheese': {
     name: "Cat'Cheese Burger",
     description: 'ستيك مفروم، جبن، صلصة خضراء منزلية، بصل مكرمل، فطر مقلي، خس، طماطم، بصل مقرمش، بطاطس',
-    priceNote: 'السعر قيد التأكيد',
   },
   'burger-crispy-chicken': {
     name: 'برغر الدجاج المقرمش',
     description: 'دجاج مقلي، جبن، صلصة خضراء منزلية، بصل مكرمل، فطر مقلي، خس، طماطم، بصل مقرمش، بطاطس',
-    priceNote: 'السعر قيد التأكيد',
   },
   'burger-cats-mix': {
     name: "Cat's Mix Burger",
     description: 'ستيك مفروم، دجاج مقلي، جبن، صلصة خضراء منزلية، بصل مكرمل، فطر مقلي، خس، طماطم، بصل مقرمش، بطاطس',
-    priceNote: 'السعر قيد التأكيد',
   },
 
   'crepe-salee-poulet-champignons': { name: 'كريب الدجاج والفطر', description: 'كريب محشو بالدجاج والفطر' },

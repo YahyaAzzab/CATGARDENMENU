@@ -1390,9 +1390,7 @@ export const menuItems: MenuItem[] = [
     nameEn: 'Fruit & Nutella Waffle',
     descriptionFr: 'Gaufre garnie de fruits frais et Nutella',
     descriptionEn: 'Waffle topped with fresh fruits and Nutella',
-    price: null,
-    priceNoteFr: 'Prix à confirmer',
-    priceNoteEn: 'Price to be confirmed',
+    price: 55,
     tags: ['chocolate'],
     badges: [],
     available: true,
@@ -1701,7 +1699,7 @@ export const menuItems: MenuItem[] = [
   },
 
   // ══════════════════════════════════════════════════════════════
-  // 🍔 BURGERS (prix non communiqués dans le menu officiel)
+  // 🍔 BURGERS
   // ══════════════════════════════════════════════════════════════
   {
     id: 'burger-catcheese',
@@ -1710,9 +1708,7 @@ export const menuItems: MenuItem[] = [
     nameEn: 'Cat\'Cheese Burger',
     descriptionFr: 'Steak haché, fromage, sauce verte maison, oignons caramélisés, champignons poêlés, laitue, tomate, oignons crispy, potatoes',
     descriptionEn: 'Beef patty, cheese, homemade green sauce, caramelized onions, sautéed mushrooms, lettuce, tomato, crispy onions, potatoes',
-    price: null,
-    priceNoteFr: 'Prix à confirmer',
-    priceNoteEn: 'Price to be confirmed',
+    price: 55,
     tags: [],
     badges: ['popular'],
     available: true,
@@ -1725,9 +1721,7 @@ export const menuItems: MenuItem[] = [
     nameEn: 'Crispy Chicken Burger',
     descriptionFr: 'Poulet pané, fromage, sauce verte maison, oignons caramélisés, champignons poêlés, laitue, tomate, oignons crispy, potatoes',
     descriptionEn: 'Breaded chicken, cheese, homemade green sauce, caramelized onions, sautéed mushrooms, lettuce, tomato, crispy onions, potatoes',
-    price: null,
-    priceNoteFr: 'Prix à confirmer',
-    priceNoteEn: 'Price to be confirmed',
+    price: 55,
     tags: [],
     badges: [],
     available: true,
@@ -1740,9 +1734,7 @@ export const menuItems: MenuItem[] = [
     nameEn: 'Cat\'s Mix Burger',
     descriptionFr: 'Steak haché, poulet pané, fromage, sauce verte maison, oignons caramélisés, champignons poêlés, laitue, tomate, oignons crispy, potatoes',
     descriptionEn: 'Beef patty, breaded chicken, cheese, homemade green sauce, caramelized onions, sautéed mushrooms, lettuce, tomato, crispy onions, potatoes',
-    price: null,
-    priceNoteFr: 'Prix à confirmer',
-    priceNoteEn: 'Price to be confirmed',
+    price: 70,
     tags: [],
     badges: ['signature'],
     available: true,
