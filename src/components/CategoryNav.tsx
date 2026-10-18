@@ -32,8 +32,10 @@ export function CategoryNav({
     const selector = id ? `[data-cat="${id}"]` : '[data-cat="all"]';
     const pill = container.querySelector(selector) as HTMLElement | null;
     if (!pill) return;
-    const scrollTarget = pill.offsetLeft - container.offsetWidth / 2 + pill.offsetWidth / 2;
-    container.scrollTo({ left: scrollTarget, behavior: 'smooth' });
+    const cRect = container.getBoundingClientRect();
+    const pRect = pill.getBoundingClientRect();
+    const delta = pRect.left + pRect.width / 2 - (cRect.left + cRect.width / 2);
+    container.scrollBy({ left: delta, behavior: 'smooth' });
   }, []);
 
   useEffect(() => {

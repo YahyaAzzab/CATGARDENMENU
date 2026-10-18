@@ -148,7 +148,7 @@ export function MenuItemCard({ item, onTap, compact = false }: MenuItemCardProps
                   {item.price !== null ? (
                     <span className="price-tag text-[0.98rem]">{t.priceFormat(item.price)}</span>
                   ) : (
-                    <span className="max-w-[72px] text-right text-[0.94rem] leading-tight italic text-chocolate-muted">
+                    <span className="max-w-[72px] text-end text-[0.94rem] leading-tight italic text-chocolate-muted">
                       {priceNote}
                     </span>
                   )}

@@ -263,6 +263,12 @@ input, textarea, select {
   background: linear-gradient(to right, transparent, var(--color-cream));
 }
 
+[dir='rtl'] .chips-fade-right {
+  right: auto;
+  left: 0;
+  background: linear-gradient(to left, transparent, var(--color-cream));
+}
+
 .price-note {
   font-size: 0.94rem;
   font-style: italic;

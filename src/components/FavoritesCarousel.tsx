@@ -23,7 +23,7 @@ export function FavoritesCarousel({
   suspended = false,
   delay = 0.45,
 }: FavoritesCarouselProps) {
-  const { t, localized } = useI18n();
+  const { t, localized, locale } = useI18n();
   const reduce = useReducedMotion();
   const trackRef = useRef<HTMLDivElement>(null);
   const offsetRef = useRef(0);
@@ -127,6 +127,7 @@ export function FavoritesCarousel({
           if (draggedRef.current) return;
           onTap(item);
         }}
+        dir={locale === 'ar' ? 'rtl' : undefined}
         className="flex w-[168px] flex-shrink-0 flex-col rounded-2xl bg-white text-start shadow-[var(--shadow-card)] border border-sage-muted/15 min-h-[44px] overflow-hidden"
       >
         <div className="flex h-[96px] items-center justify-center bg-[#FDF6EC]">
@@ -166,6 +167,7 @@ export function FavoritesCarousel({
       </h2>
       <div
         className="-mx-4 select-none overflow-hidden"
+        dir="ltr"
         style={{ touchAction: 'pan-y' }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -175,7 +177,6 @@ export function FavoritesCarousel({
         <div
           ref={trackRef}
           className="flex w-max gap-2.5 px-4"
-          dir="ltr"
           role="list"
           aria-label={t.favoritesTitle}
         >

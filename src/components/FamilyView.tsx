@@ -112,7 +112,8 @@ export function FamilyView({
     const dy = e.changedTouches[0].clientY - touchStart.current.y;
     touchStart.current = null;
     if (Math.abs(dx) > 72 && Math.abs(dx) > Math.abs(dy) * 1.4) {
-      goNeighbor(dx < 0 ? 1 : -1);
+      const forward = locale === 'ar' ? dx > 0 : dx < 0;
+      goNeighbor(forward ? 1 : -1);
     }
   };
 
@@ -201,7 +202,11 @@ export function FamilyView({
                   >
                     {localized(section.category, 'name')}
                   </h3>
-                  <div className="h-px flex-1 bg-gradient-to-r from-sage-muted/40 to-transparent" />
+                  <div
+                    className={`h-px flex-1 from-sage-muted/40 to-transparent ${
+                      locale === 'ar' ? 'bg-gradient-to-l' : 'bg-gradient-to-r'
+                    }`}
+                  />
                 </div>
 
                 <div className={compact ? 'grid grid-cols-2 gap-2.5' : 'space-y-2.5'}>

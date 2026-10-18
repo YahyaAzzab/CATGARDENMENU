@@ -121,7 +121,7 @@ function SheetContent({ item, locale, t, localized }: {
         >
           {name}
         </h2>
-        <div className="flex-shrink-0 text-right">
+        <div className="flex-shrink-0 text-end">
           {item.price !== null ? (
             <span className="text-xl font-bold" style={{ color: 'var(--color-sage-dark)', fontFamily: 'var(--font-display)' }}>
               {t.priceFormat(item.price)}
