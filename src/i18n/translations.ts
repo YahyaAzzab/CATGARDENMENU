@@ -102,7 +102,7 @@ export const translations: Record<Locale, Translations> = {
     heroTitle: 'Bienvenue au jardin',
     heroSubtitle: 'Détendez-vous, les chats s\'occupent de l\'ambiance 🌿',
 
-    filterVegetarian: 'Végétarien',
+    filterVegetarian: 'Vegetarian',
     filterChocolate: 'Chocolat',
     filterTraditional: 'Traditionnel',
     filterSignature: 'Signature',
@@ -112,7 +112,7 @@ export const translations: Record<Locale, Translations> = {
     backToTop: 'Remonter en haut',
     swipeHint: 'Glissez pour changer de famille',
 
-    tagVegetarian: 'Végétarien',
+    tagVegetarian: 'Vegetarian',
     tagVegan: 'Végan',
     tagChocolate: 'Chocolat',
     tagSpicy: 'Épicé',
@@ -241,7 +241,7 @@ export const translations: Record<Locale, Translations> = {
     heroTitle: 'أهلاً بك في الحديقة',
     heroSubtitle: 'استرخِ، فالقطط تُحيي الأجواء 🌿',
 
-    filterVegetarian: 'نباتي',
+    filterVegetarian: 'Vegetarian',
     filterChocolate: 'شوكولاتة',
     filterTraditional: 'تقليدي',
     filterSignature: 'سيغنيتشر',
@@ -251,7 +251,7 @@ export const translations: Record<Locale, Translations> = {
     backToTop: 'العودة إلى الأعلى',
     swipeHint: 'اسحب لتغيير القسم',
 
-    tagVegetarian: 'نباتي',
+    tagVegetarian: 'Vegetarian',
     tagVegan: 'نباتي صرف',
     tagChocolate: 'شوكولاتة',
     tagSpicy: 'حار',

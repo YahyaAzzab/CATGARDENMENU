@@ -179,7 +179,7 @@ export const arCopy: Record<string, ArCopy> = {
   'cocktail-mojito-classique': { name: 'موهيتو كلاسيكي', description: 'نعناع، ليمون أخضر، سكر القصب، ماء غازي' },
   'cocktail-mojito-blue-lagoon': { name: 'موهيتو بلو لاغون', description: 'موهيتو بالكوراساو الأزرق' },
   'cocktail-pina-colada': { name: 'بينا كولادا', description: 'أناناس، جوز الهند، كريمة' },
-  'cocktail-blue-sky': { name: 'السماء الزرقاء', description: 'كوكتيل أزرق منعش بالحمضيات' },
+  'cocktail-blue-sky': { name: 'Blue Sky', description: 'كوكتيل أزرق منعش بالحمضيات' },
   'cocktail-sweet-mango': { name: 'مانجو حلوة', description: 'كوكتيل خفيف بنكهة المانجو' },
   'cocktail-cats-garden': { name: "Le Cat's Garden", description: 'كوكتيل سيغنيتشر الدار' },
 
@@ -238,7 +238,7 @@ export const arCopy: Record<string, ArCopy> = {
   'dessert-san-sebastian-pistache': { name: 'سان سيباستيان بالفستق', description: 'تشيز كيك باسكي بالفستق' },
   'dessert-pain-perdu': { name: 'خبز محمص', description: 'خبز محمص ذهبي ومكرمل' },
   'dessert-croissant-four': { name: 'كرواسون الفرن نوتيلا وكراميل', description: 'كرواسون محمص في الفرن بنوتيلا وكراميل' },
-  'dessert-healthy-bowl': { name: 'وعاء صحي', description: 'وعاء ياغورت وفواكه طرية' },
+  'dessert-healthy-bowl': { name: 'Healthy Bowl', description: 'وعاء ياغورت وفواكه طرية' },
   'dessert-salade-fruits': { name: 'سلطة الفواكه', description: 'تشكيلة فواكه الموسم الطرية' },
   'dessert-pain-chocolat': { name: 'بان بالشوكولاتة', description: 'فيينوازري بالشوكولاتة' },
   'dessert-mini-pain-raisins': { name: 'ميني بان بالزبيب', description: 'فيينوازري صغيرة بالزبيب' },
