@@ -1,6 +1,6 @@
-import { useEffect, useState, type ComponentProps } from 'react';
-import { AnimatePresence, LayoutGroup, motion } from 'framer-motion';
-import { I18nProvider } from './i18n/I18nContext';
+import { useEffect, useRef, useState, type ComponentProps } from 'react';
+import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from 'framer-motion';
+import { I18nProvider, useI18n } from './i18n/I18nContext';
 import type { MenuItem } from './data/types';
 import type { FamilyId } from './data/families';
 
@@ -10,8 +10,8 @@ import { HomeView } from './components/HomeView';
 import { Footer } from './components/Footer';
 import { BackToTop } from './components/BackToTop';
 import { PawPrint } from './components/Icons';
-import { useMenuRoute } from './hooks/useMenuRoute';
-import { irisEase } from './motion';
+import { useMenuRoute, type PageDirection } from './hooks/useMenuRoute';
+import { pageEase, pageVariants, stillPageVariants } from './motion';
 import {
   getFamilyView,
   getProductSheet,
@@ -34,9 +34,15 @@ function MenuApp({
   fromSplash: boolean;
   showMark: boolean;
 }) {
-  const { familyId, tableNumber, openFamily, goHome, replaceFamily } = useMenuRoute();
+  const { familyId, direction, tableNumber, openFamily, goHome, replaceFamily } = useMenuRoute();
+  const { locale } = useI18n();
+  const reduce = useReducedMotion();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const [pawStep, setPawStep] = useState(0);
+  const skipPaws = useRef(true);
+  const pageKey = familyId ?? 'home';
+  const travel = { direction, rtl: locale === 'ar' };
 
   useEffect(() => {
     if (!ready) return;
@@ -49,6 +55,16 @@ function MenuApp({
     const id = window.setTimeout(run, 400);
     return () => window.clearTimeout(id);
   }, [ready]);
+
+  useEffect(() => {
+    setSelectedItem(null);
+    if (skipPaws.current) {
+      skipPaws.current = false;
+      return;
+    }
+    if (reduce) return;
+    setPawStep((n) => n + 1);
+  }, [pageKey, reduce]);
 
   const handleOpenFamily = (id: FamilyId) => {
     setSearchQuery('');
@@ -64,51 +80,91 @@ function MenuApp({
       <Header onLogoClick={goHome} showMark={showMark} />
 
       <LayoutGroup>
-        <AnimatePresence mode="sync" initial={false}>
-          {familyId ? (
-            <motion.div
-              key={familyId}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.28, ease: irisEase }}
-            >
-              <DeferredFamily
-                familyId={familyId}
-                searchQuery={searchQuery}
-                onBack={goHome}
-                onSwipeFamily={replaceFamily}
-                onOpenItem={setSelectedItem}
-              />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="home"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.28, ease: irisEase }}
-            >
-              <main>
-                <HomeView
-                  tableNumber={tableNumber}
-                  ready={ready}
-                  fromSplash={fromSplash}
+        <div className="page-stage relative">
+          <AnimatePresence mode="popLayout" initial={false} custom={travel}>
+            {familyId ? (
+              <motion.div
+                key={familyId}
+                custom={travel}
+                variants={reduce ? stillPageVariants : pageVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                className="w-full"
+              >
+                <DeferredFamily
+                  familyId={familyId}
                   searchQuery={searchQuery}
-                  onSearch={setSearchQuery}
-                  onOpenFamily={handleOpenFamily}
+                  onBack={goHome}
+                  onSwipeFamily={replaceFamily}
                   onOpenItem={setSelectedItem}
-                  spotlightPaused={selectedItem !== null}
+                  entrance={direction === 'forward' ? 'rise' : 'none'}
                 />
-              </main>
-              <Footer />
-            </motion.div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="home"
+                custom={travel}
+                variants={reduce ? stillPageVariants : pageVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                className="w-full"
+              >
+                <main>
+                  <HomeView
+                    tableNumber={tableNumber}
+                    ready={ready}
+                    fromSplash={fromSplash}
+                    searchQuery={searchQuery}
+                    onSearch={setSearchQuery}
+                    onOpenFamily={handleOpenFamily}
+                    onOpenItem={setSelectedItem}
+                    spotlightPaused={selectedItem !== null}
+                  />
+                </main>
+                <Footer />
+              </motion.div>
+            )}
+          </AnimatePresence>
+          {pawStep > 0 && !reduce && (
+            <PawSteps key={pawStep} direction={direction} rtl={locale === 'ar'} />
           )}
-        </AnimatePresence>
+        </div>
       </LayoutGroup>
 
       <DeferredSheet item={selectedItem} onClose={() => setSelectedItem(null)} />
       <BackToTop hidden={selectedItem !== null} />
+    </div>
+  );
+}
+
+function PawSteps({ direction, rtl }: { direction: PageDirection; rtl: boolean }) {
+  const forward = direction === 'forward' || direction === 'next';
+  const toRight = rtl ? !forward : forward;
+  return (
+    <div className="pointer-events-none absolute inset-x-0 top-3 z-30 h-16 overflow-hidden" aria-hidden>
+      {[0, 1, 2].map((i) => {
+        const from = toRight ? -36 : 36;
+        const dist = (toRight ? 1 : -1) * (42 + i * 78);
+        return (
+          <motion.span
+            key={i}
+            className="absolute text-sage"
+            style={{ top: i % 2 === 0 ? 4 : 26, left: '46%' }}
+            initial={{ x: from, opacity: 0, scale: 0.35, rotate: toRight ? -24 : 24 }}
+            animate={{
+              x: from + dist,
+              opacity: [0, 0.75, 0],
+              scale: [0.4, 1, 0.82],
+              rotate: i % 2 === 0 ? -10 : 14,
+            }}
+            transition={{ duration: 0.62, delay: 0.02 + i * 0.08, ease: pageEase }}
+          >
+            <PawPrint size={18} />
+          </motion.span>
+        );
+      })}
     </div>
   );
 }

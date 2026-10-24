@@ -14,13 +14,14 @@ import { useI18n } from '../i18n/I18nContext';
 import { FamilyIllustration } from './FamilyIllustration';
 import { CategoryNav } from './CategoryNav';
 import { MenuItemCard } from './MenuItemCard';
-import { irisEase } from '../motion';
+import { pageEase } from '../motion';
 
 interface FamilyViewProps {
   familyId: FamilyId;
   searchQuery: string;
   onBack: () => void;
-  onSwipeFamily: (id: FamilyId) => void;
+  onSwipeFamily: (id: FamilyId, dir: 'next' | 'prev') => void;
+  entrance?: 'rise' | 'none';
   onOpenItem: (item: MenuItem) => void;
 }
 
@@ -30,6 +31,7 @@ export function FamilyView({
   onBack,
   onSwipeFamily,
   onOpenItem,
+  entrance = 'rise',
 }: FamilyViewProps) {
   const { t, localized, locale } = useI18n();
   const reduce = useReducedMotion();
@@ -84,7 +86,7 @@ export function FamilyView({
     const ids = orderedFamilies.map((f) => f.id);
     const idx = ids.indexOf(familyId);
     const next = ids[(idx + dir + ids.length) % ids.length];
-    if (next && next !== familyId) onSwipeFamily(next);
+    if (next && next !== familyId) onSwipeFamily(next, dir === 1 ? 'next' : 'prev');
   };
 
   const onTouchStart = (e: React.TouchEvent) => {
@@ -112,7 +114,7 @@ export function FamilyView({
         <motion.div
           layoutId={`fam-visual-${familyId}`}
           className="relative h-[148px] overflow-hidden"
-          transition={reduce ? { duration: 0 } : { duration: 0.55, ease: irisEase }}
+          transition={reduce ? { duration: 0 } : { duration: 0.5, ease: pageEase }}
         >
           <FamilyIllustration familyId={familyId} variant="header" />
           <div className="absolute inset-0 bg-gradient-to-t from-chocolate/35 via-transparent to-chocolate/10" />
@@ -141,7 +143,12 @@ export function FamilyView({
         </div>
       </div>
 
-      <div className="px-4 pb-8 pt-3">
+      <motion.div
+        className="px-4 pb-8 pt-3"
+        initial={reduce || entrance === 'none' ? false : { opacity: 0, y: 22 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={reduce ? { duration: 0 } : { duration: 0.46, delay: 0.06, ease: pageEase }}
+      >
         <div data-chips>
           <CategoryNav
             categories={chipCategories}
@@ -208,7 +215,7 @@ export function FamilyView({
         <p className="mt-6 text-center text-[0.94rem] text-chocolate-muted/70">
           {FAMILY_IDS.length > 1 ? t.swipeHint : null}
         </p>
-      </div>
+      </motion.div>
     </div>
   );
 }

@@ -17,6 +17,8 @@ import { FavoritesCarousel } from './FavoritesCarousel';
 import { MenuItemCard } from './MenuItemCard';
 import { cardSpring, cascadeStagger } from '../motion';
 
+let homeSeen = false;
+
 interface HomeViewProps {
   tableNumber: string | null;
   ready: boolean;
@@ -42,8 +44,13 @@ export function HomeView({
   const reduce = useReducedMotion();
   const brunchTime = isBrunchHours();
   const ordered = getOrderedFamilies(brunchTime);
-  const headerDelay = fromSplash ? ordered.length * cascadeStagger + 0.08 : 0.12;
+  const firstReveal = fromSplash && !homeSeen;
+  const headerDelay = firstReveal ? ordered.length * cascadeStagger + 0.08 : 0.05;
   const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    homeSeen = true;
+  }, []);
 
   useEffect(() => {
     const id = window.setInterval(() => setNow(new Date()), 60_000);
@@ -116,7 +123,7 @@ export function HomeView({
                     size={sizeFor(family.id, featured)}
                     index={index}
                     ready={ready}
-                    fromSplash={fromSplash}
+                    fromSplash={firstReveal}
                     onSelect={onOpenFamily}
                   />
                 );
@@ -128,7 +135,7 @@ export function HomeView({
             items={favorites}
             onTap={onOpenItem}
             suspended={spotlightPaused}
-            delay={fromSplash ? headerDelay + 0.08 : 0.2}
+            delay={firstReveal ? headerDelay + 0.08 : 0.12}
           />
         </>
       )}

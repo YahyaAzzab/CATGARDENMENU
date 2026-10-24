@@ -2,7 +2,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import type { Family } from '../data/families';
 import { useI18n } from '../i18n/I18nContext';
 import { FamilyIllustration } from './FamilyIllustration';
-import { cardSpring, cascadeStagger } from '../motion';
+import { cardSpring, cascadeStagger, pageEase } from '../motion';
 import { prefetchMenuScreens } from '../lib/loadScreens';
 
 interface FamilyCardProps {
@@ -63,7 +63,7 @@ export function FamilyCard({
       <motion.div
         layoutId={`fam-visual-${family.id}`}
         className="absolute inset-0"
-        transition={reduce ? { duration: 0 } : { duration: 0.55, ease: [0.4, 0, 0.2, 1] }}
+        transition={reduce ? { duration: 0 } : { duration: 0.5, ease: pageEase }}
       >
         <FamilyIllustration familyId={family.id} priority={index < 2} />
       </motion.div>
