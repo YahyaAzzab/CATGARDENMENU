@@ -11,6 +11,7 @@ import { menuItems } from '../data/menu';
 import { getSpotlightItems } from '../lib/daypart';
 import { matchesSearch } from '../lib/filters';
 import { useI18n } from '../i18n/I18nContext';
+import { BoutiqueInvite } from './BoutiqueInvite';
 import { SearchBar } from './SearchBar';
 import { FamilyCard } from './FamilyCard';
 import { FavoritesCarousel } from './FavoritesCarousel';
@@ -91,6 +92,7 @@ export function HomeView({
           )}
         </div>
         <SearchBar value={searchQuery} onChange={onSearch} />
+        <BoutiqueInvite />
       </motion.div>
 
       {searchQuery ? (

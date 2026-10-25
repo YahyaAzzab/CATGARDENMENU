@@ -78,6 +78,8 @@ export interface Translations {
   footerBy: string;
   footerManager: string;
   menuCredit: string;
+  boutiqueTitle: string;
+  boutiqueNote: string;
 }
 
 export const translations: Record<Locale, Translations> = {
@@ -149,6 +151,8 @@ export const translations: Record<Locale, Translations> = {
     footerBy: "Cat's Garden par",
     footerManager: '@MaitreChocolatierBennis',
     menuCredit: "Ce menu digital a été créé par l'équipe",
+    boutiqueTitle: 'La boutique du chef',
+    boutiqueNote: 'Pièces à emporter',
   },
   en: {
     appTitle: "Cat's Garden",
@@ -218,6 +222,8 @@ export const translations: Record<Locale, Translations> = {
     footerBy: "Cat's Garden by",
     footerManager: '@MaitreChocolatierBennis',
     menuCredit: 'This digital menu was created by',
+    boutiqueTitle: "The chef's boutique",
+    boutiqueNote: 'Pastries to take away',
   },
   ar: {
     appTitle: "Cat's Garden",
@@ -288,6 +294,8 @@ export const translations: Record<Locale, Translations> = {
     footerBy: "Cat's Garden من طرف",
     footerManager: '@MaitreChocolatierBennis',
     menuCredit: 'أُنشئت هذه القائمة الرقمية من طرف فريق',
+    boutiqueTitle: 'بوتيك الشيف',
+    boutiqueNote: 'حلويات للأخذ',
   },
 };
 

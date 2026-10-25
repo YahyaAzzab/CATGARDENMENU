@@ -407,6 +407,73 @@ body {
   border-radius: var(--radius-sm);
 }
 
+html.is-maison body {
+  background: #1a120e;
+  color: #f6efe4;
+}
+
+html.is-maison :focus-visible {
+  outline-color: #c6a36a;
+}
+
+.boutique-invite {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0 4px;
+  padding: 10px 12px 8px 16px;
+  border-radius: 18px;
+  text-decoration: none;
+  color: #f6efe4;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(198, 163, 106, 0.35), transparent 46%),
+    #1a120e;
+  box-shadow: 0 10px 24px rgba(26, 18, 14, 0.16);
+}
+
+.invite-mark {
+  flex: none;
+  font-family: 'Monsieur La Doulaise', cursive;
+  font-size: 2rem;
+  line-height: 0.75;
+  color: #f6efe4;
+  padding-inline-start: 8px;
+}
+
+.boutique-invite span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.boutique-invite strong {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 400;
+  font-style: italic;
+  line-height: 1.15;
+}
+
+.boutique-invite em {
+  font-style: normal;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #e4c98a;
+}
+
+.boutique-invite svg {
+  width: 22px;
+  height: 22px;
+  margin-inline-start: auto;
+  flex: none;
+  color: #c6a36a;
+}
+
+[dir='rtl'] .boutique-invite svg {
+  transform: scaleX(-1);
+}
+
 /* ─── Overscroll behavior ─────────────────────────────────────── */
 .overscroll-contain {
   overscroll-behavior: contain;

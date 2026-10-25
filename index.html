@@ -2,14 +2,27 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      var path = location.pathname;
+      if (path.length > 1 && path.charAt(path.length - 1) === '/') path = path.replace(/\/+$/, '');
+      if (path === '/maison') {
+        history.replaceState(null, '', '/' + location.search + location.hash);
+        path = '/';
+      }
+      if (path !== '/catgardenmenu') {
+        document.documentElement.classList.add('is-maison');
+        var theme = document.querySelector('meta[name="theme-color"]');
+        if (theme) theme.setAttribute('content', '#1A120E');
+      }
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
     <meta name="theme-color" content="#8BA888" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
 
     <!-- SEO -->
-    <title>Cat's Garden · Menu | Café à chats – Fès, Maroc</title>
-    <meta name="description" content="Découvrez le menu de Cat's Garden, le premier café à chats de Fès. Brunchs, pâtisseries, cafés de spécialité, crêpes, pancakes, pizzas et bien plus dans un cadre chaleureux entouré de chats." />
+    <title>Maître Chocolatier Bennis · Fès</title>
+    <meta name="description" content="La boutique de Maître Chocolatier Bennis à Fès. Pièces dressées à la main, à commander sur WhatsApp." />
     <meta name="keywords" content="Cat's Garden, café chat, Fès, Maroc, menu, brunch, pancakes, crêpes, café, restaurant" />
 
     <!-- Open Graph : l’image doit être une URL https absolue une fois le domaine en ligne. -->
@@ -33,6 +46,7 @@
 
     <style>
       html, body { margin: 0; background: #FDF6EC; color: #3E2723; }
+      html.is-maison, html.is-maison body { background: #1A120E; color: #F6EFE4; }
       #root { min-height: 100dvh; }
     </style>
 
@@ -41,14 +55,14 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Nunito:ital,wght@0,400;0,600;0,700;1,400;1,700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Monsieur+La+Doulaise&family=Nunito:ital,wght@0,400;0,600;0,700;1,400;1,700&display=swap"
       media="print"
       onload="this.media='all'"
     />
     <noscript>
       <link
         rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Nunito:ital,wght@0,400;0,600;0,700;1,400;1,700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Monsieur+La+Doulaise&family=Nunito:ital,wght@0,400;0,600;0,700;1,400;1,700&display=swap"
       />
     </noscript>
   </head>
