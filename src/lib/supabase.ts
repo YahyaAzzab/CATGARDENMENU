@@ -1,13 +1,21 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
-const url = import.meta.env.VITE_SUPABASE_URL?.trim() ?? ''
-const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim() ?? ''
+function envValue(value: unknown) {
+  return typeof value === 'string' ? value.trim() : ''
+}
+
+const url = envValue(import.meta.env.VITE_SUPABASE_URL).replace(/\/+$/, '')
+const anonKey =
+  envValue(import.meta.env.VITE_SUPABASE_ANON_KEY) ||
+  envValue(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY) ||
+  envValue(import.meta.env.VITE_SUPABASE_KEY)
 
 export const supabaseEnv = {
   url,
   anonKey,
   ready: url.length > 0 && anonKey.length > 0,
-}
+  missing: !url ? 'url' : !anonKey ? 'key' : null,
+} as const
 
 export const supabase: SupabaseClient | null = supabaseEnv.ready
   ? createClient(url, anonKey, {

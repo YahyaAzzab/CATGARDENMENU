@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { supabase } from '../lib/supabase'
+import { supabase, supabaseEnv } from '../lib/supabase'
 import { isTheme, orderStatuses, themes, type OrderLine, type OrderStatus, type ThemeId } from '../maison/house'
 import { pastries, pastryImages } from '../maison/pastries'
 import { fetchPieces } from '../maison/piecesDb'
@@ -131,7 +131,7 @@ export default function AdminApp() {
       {!ready ? null : !supabase ? (
         <Gate
           needsSchema={false}
-          offline
+          offline={supabaseEnv.missing === 'key' ? 'key' : 'url'}
           onSession={() => {}}
         />
       ) : session ? (
@@ -158,7 +158,7 @@ function Gate({
   onSession,
 }: {
   needsSchema: boolean
-  offline: boolean
+  offline: false | 'url' | 'key'
   onSession: (session: Session) => void
 }) {
   const [email, setEmail] = useState('')
@@ -191,7 +191,11 @@ function Gate({
           <h1>L’atelier</h1>
           <p>Les pièces, les commandes et le thème de la boutique.</p>
           {offline ? (
-            <p className="form-error">La base n’est pas encore reliée à ce site.</p>
+            <p className="form-error">
+              {offline === 'key'
+                ? 'L’adresse de la base est en place. La clé publique n’a pas été prise dans ce dépôt : dans Vercel, la variable doit s’appeler VITE_SUPABASE_ANON_KEY, être cochée pour Production, puis un nouveau déploiement est nécessaire.'
+                : 'La base n’est pas encore reliée à ce site.'}
+            </p>
           ) : (
             <form onSubmit={submit}>
               <label>
@@ -303,10 +307,57 @@ function Desk({
   )
 }
 
+function fold(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+}
+
+function Choice({
+  kind,
+  pressed,
+  title,
+  hint,
+  onToggle,
+}: {
+  kind: 'star' | 'check'
+  pressed: boolean
+  title: string
+  hint: string
+  onToggle: () => void
+}) {
+  return (
+    <button
+      type="button"
+      className={pressed ? `choice choice-${kind} is-on` : `choice choice-${kind}`}
+      aria-pressed={pressed}
+      onClick={onToggle}
+    >
+      <span className="choice-mark" aria-hidden="true">
+        {kind === 'star' ? (
+          <svg viewBox="0 0 24 24">
+            <path d="M12 3.2 14.4 9l6.2.5-4.7 4 1.5 6L12 16.2 6.6 19.5l1.5-6-4.7-4L9.6 9Z" />
+          </svg>
+        ) : (
+          <svg viewBox="0 0 24 24">
+            <path d="M5 12.5 10 17.5 19 7.5" />
+          </svg>
+        )}
+      </span>
+      <span className="choice-copy">
+        <strong>{title}</strong>
+        <small>{hint}</small>
+      </span>
+    </button>
+  )
+}
+
 function Pieces({ onReady }: { onReady: () => void }) {
   const [rows, setRows] = useState<Draft[] | null>(null)
   const [savedId, setSavedId] = useState('')
   const [error, setError] = useState('')
+  const [query, setQuery] = useState('')
   const [creating, setCreating] = useState(false)
   const [freshName, setFreshName] = useState('')
   const [freshDetail, setFreshDetail] = useState('')
@@ -440,6 +491,11 @@ function Pieces({ onReady }: { onReady: () => void }) {
   if (!rows) return <p className="note">Ouverture des pièces…</p>
   if (error === 'missing') return <SchemaCard />
 
+  const needle = fold(query.trim())
+  const shown = needle
+    ? rows.filter((row) => fold(`${row.name} ${row.detail}`).includes(needle))
+    : rows
+
   return (
     <div className="stack">
       {rows.length === 0 && !error && (
@@ -451,12 +507,32 @@ function Pieces({ onReady }: { onReady: () => void }) {
         </section>
       )}
       {error && error !== 'missing' && <p className="form-error">{error}</p>}
+      <label className="piece-search">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="10.5" cy="10.5" r="6.5" />
+          <path d="M15.2 15.2 20 20" />
+        </svg>
+        <input
+          type="search"
+          value={query}
+          placeholder="Rechercher une pièce"
+          autoComplete="off"
+          onChange={(event) => setQuery(event.target.value)}
+        />
+      </label>
       {!creating ? (
-        <button className="solid" type="button" onClick={() => setCreating(true)}>
-          Nouvelle pièce
+        <button className="new-piece" type="button" onClick={() => setCreating(true)}>
+          <span className="new-piece-plus" aria-hidden="true">
+            +
+          </span>
+          <span>
+            <strong>Nouvelle pièce</strong>
+            <small>Ajouter un gâteau à la vitrine</small>
+          </span>
         </button>
       ) : (
-        <article className="piece-edit">
+        <article className="piece-edit is-new">
+          <p className="new-kicker">Nouvelle pièce</p>
           {freshImage ? <img src={freshImage} alt="" /> : <span className="image-wait">Image</span>}
           <div className="fields">
             <label>
@@ -471,8 +547,7 @@ function Pieces({ onReady }: { onReady: () => void }) {
               Prix en DH
               <input inputMode="numeric" value={freshPrice} onChange={(event) => setFreshPrice(event.target.value)} />
             </label>
-            <label>
-              Image
+            <label className="file-pick">
               <input
                 type="file"
                 accept="image/*"
@@ -484,6 +559,7 @@ function Pieces({ onReady }: { onReady: () => void }) {
                     .catch(() => setError('Cette image n’a pas pu être lue.'))
                 }}
               />
+              <span>{freshImage ? 'Changer l’image' : 'Choisir une image'}</span>
             </label>
             <label>
               Ou un lien d’image
@@ -504,7 +580,10 @@ function Pieces({ onReady }: { onReady: () => void }) {
           </div>
         </article>
       )}
-      {rows.map((row, index) => (
+      {needle && shown.length === 0 && <p className="note">Aucune pièce pour cette recherche.</p>}
+      {shown.map((row) => {
+        const index = rows.findIndex((item) => item.id === row.id)
+        return (
         <article className="piece-edit" key={row.id}>
           <img src={row.imageUrl || pastryImages[row.id]} alt="" />
           <div className="fields">
@@ -524,32 +603,30 @@ function Pieces({ onReady }: { onReady: () => void }) {
                 onChange={(event) => update(row.id, { price: event.target.value })}
               />
             </label>
-            <div className="checks">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={row.signature}
-                  onChange={(event) => {
-                    const on = event.target.checked
-                    setRows(
-                      (current) =>
-                        current?.map((item) => ({
-                          ...item,
-                          signature: item.id === row.id ? on : on ? false : item.signature,
-                        })) ?? null,
-                    )
-                  }}
-                />
-                Populaire — le choix du chef
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={row.visible}
-                  onChange={(event) => update(row.id, { visible: event.target.checked })}
-                />
-                Visible
-              </label>
+            <div className="choices">
+              <Choice
+                kind="star"
+                pressed={row.signature}
+                title="Populaire"
+                hint={row.signature ? 'En haut de la boutique' : 'Le choix du chef'}
+                onToggle={() => {
+                  const on = !row.signature
+                  setRows(
+                    (current) =>
+                      current?.map((item) => ({
+                        ...item,
+                        signature: item.id === row.id ? on : on ? false : item.signature,
+                      })) ?? null,
+                  )
+                }}
+              />
+              <Choice
+                kind="check"
+                pressed={row.visible}
+                title="Visible"
+                hint={row.visible ? 'Dans la boutique' : 'Hors de la vitrine'}
+                onToggle={() => update(row.id, { visible: !row.visible })}
+              />
             </div>
             <div className="row-actions">
               <button className="ghost-ink" type="button" onClick={() => move(index, -1)} disabled={index === 0}>
@@ -570,7 +647,8 @@ function Pieces({ onReady }: { onReady: () => void }) {
             </div>
           </div>
         </article>
-      ))}
+        )
+      })}
     </div>
   )
 }
