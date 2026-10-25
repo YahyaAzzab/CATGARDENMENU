@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { supabase } from '../lib/supabase'
 import { isTheme, type ThemeId } from './house'
-import { pastries, pastryImages, type Pastry } from './pastries'
+import { pastries, pastryFallback, pastryImages, type Pastry } from './pastries'
 import { fetchPieces } from './piecesDb'
 
 type PieceRow = {
@@ -16,11 +16,12 @@ type PieceRow = {
 }
 
 function toPastry(row: PieceRow): Pastry | null {
-  const image = row.image_url?.trim() || pastryImages[row.id]
-  if (!image) return null
+  if (!row.name?.trim()) return null
+  const image = row.image_url?.trim() || pastryImages[row.id] || pastryFallback
+  const name = row.name.trim() === 'Tarte cookies' ? 'Cookies' : row.name
   return {
     id: row.id,
-    name: row.name,
+    name,
     detail: row.detail,
     price: row.price,
     image,

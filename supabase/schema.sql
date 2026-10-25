@@ -74,7 +74,7 @@ insert into public.pieces (id, name, detail, price, signature, visible, sort) va
   ('tiramisu', 'Tiramisu', 'Tiramisu crémeux au café', 45, false, true, 2),
   ('brookie', 'Brookie', 'Mi-brownie, mi-cookie', 55, false, true, 3),
   ('brownie', 'Brownie', 'Brownie fondant au chocolat', 40, false, true, 4),
-  ('tarte-cookies', 'Tarte cookies', 'Tarte cookie géante aux pépites de chocolat', 50, false, true, 5),
+  ('tarte-cookies', 'Cookies', 'Tarte cookie géante aux pépites de chocolat', 50, false, true, 5),
   ('croissant-four', 'Croissant au four', 'Croissant doré au four, Nutella et caramel', 48, false, true, 6)
 on conflict (id) do nothing;
 

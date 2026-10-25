@@ -16,7 +16,7 @@ export type PieceRecord = {
 
 type ReadError = { code?: string; message?: string } | null
 
-function missingImageColumn(error: ReadError) {
+export function missingImageColumn(error: ReadError) {
   if (!error) return false
   return error.code === '42703' || /image_url/i.test(error.message ?? '')
 }

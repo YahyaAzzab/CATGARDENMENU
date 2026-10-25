@@ -17,6 +17,8 @@ export type Pastry = {
   sort?: number
 }
 
+export const pastryFallback = '/maison/plate.svg'
+
 export const pastryImages: Record<string, string> = {
   'san-sebastian-pistache': pistache,
   'san-sebastian-chocolat': chocolat,
@@ -67,7 +69,7 @@ export const pastries: Pastry[] = [
   },
   {
     id: 'tarte-cookies',
-    name: 'Tarte cookies',
+    name: 'Cookies',
     detail: 'Tarte cookie géante aux pépites de chocolat',
     price: 50,
     image: cookies,

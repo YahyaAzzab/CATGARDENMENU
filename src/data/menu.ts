@@ -1865,8 +1865,8 @@ export const menuItems: MenuItem[] = [
   {
     id: 'dessert-cookies-pie',
     categoryId: 'gateaux-desserts',
-    nameFr: 'Tarte cookies',
-    nameEn: 'Cookies Pie',
+    nameFr: 'Cookies',
+    nameEn: 'Cookies',
     descriptionFr: 'Tarte cookie géante aux pépites de chocolat',
     descriptionEn: 'Giant chocolate chip cookie pie',
     price: 40,

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { AnimatePresence, MotionConfig, motion, useReducedMotion } from 'framer-motion'
 import { config } from '../config'
 import { PawPrint } from '../components/Icons'
 import { CartProvider, orderHref, useCart } from './cart'
@@ -32,12 +32,15 @@ function Opening({
   onLift: () => void
   onDone: () => void
 }) {
-  const [stage, setStage] = useState(0)
+  const [ready, setReady] = useState(false)
+  const [lift, setLift] = useState(false)
   const finished = useRef(false)
   const onLiftRef = useRef(onLift)
   const onDoneRef = useRef(onDone)
   onLiftRef.current = onLift
   onDoneRef.current = onDone
+  const pace = reduce ? 0.78 : 1
+  const at = (seconds: number) => seconds * pace
 
   const finish = () => {
     if (finished.current) return
@@ -46,66 +49,86 @@ function Opening({
   }
 
   useEffect(() => {
-    const step = reduce ? 800 : 1100
     const timers = [
-      window.setTimeout(() => setStage(1), 140),
-      window.setTimeout(() => setStage(2), step),
-      window.setTimeout(() => setStage(3), step * 2),
-      window.setTimeout(() => setStage(4), step * 2 + (reduce ? 2200 : 2600)),
+      window.setTimeout(() => setReady(true), at(1.55) * 1000),
+      window.setTimeout(() => setLift(true), at(2.55) * 1000),
     ]
     return () => timers.forEach((id) => window.clearTimeout(id))
   }, [reduce])
 
   useEffect(() => {
-    if (stage < 4) return
+    if (!lift) return
     onLiftRef.current()
-    const id = window.setTimeout(finish, reduce ? 700 : 1000)
+    const id = window.setTimeout(finish, at(0.9) * 1000)
     return () => window.clearTimeout(id)
-  }, [stage, reduce])
+  }, [lift, reduce])
 
   return (
-    <motion.div
-      className="opening"
-      role="dialog"
-      aria-label="Maître Chocolatier Bennis"
-      initial={{ y: 0 }}
-      animate={stage >= 4 ? { y: '-100%' } : { y: 0 }}
-      transition={stage >= 4 ? { duration: reduce ? 0.7 : 1.15, ease: settle } : { duration: 0 }}
-      onAnimationComplete={() => {
-        if (stage >= 4) finish()
-      }}
-    >
-      <div className="opening-mark">
-        <motion.span
-          className="opening-kicker"
-          initial={false}
-          animate={{ opacity: stage >= 1 ? 1 : 0, y: stage >= 1 ? 0 : 12 }}
-          transition={{ duration: reduce ? 0.15 : 0.55, ease: settle }}
+    <MotionConfig reducedMotion="never">
+      <motion.div
+        className="opening"
+        role="dialog"
+        aria-label="Maître Chocolatier Bennis"
+        initial={{ y: 0 }}
+        animate={lift ? { y: '-100%' } : { y: 0 }}
+        transition={lift ? { duration: at(0.95), ease: settle } : { duration: 0 }}
+        onAnimationComplete={() => {
+          if (lift) finish()
+        }}
+      >
+        <motion.div
+          className="opening-mark"
+          initial={{ opacity: 1, y: 0 }}
+          animate={lift ? { opacity: 0, y: -28 } : { opacity: 1, y: 0 }}
+          transition={{ duration: at(0.7), ease: settle }}
         >
-          Maître Chocolatier
-        </motion.span>
-        <motion.span
-          className="opening-rule"
-          aria-hidden="true"
-          initial={false}
-          animate={{ scaleX: stage >= 2 ? 1 : 0, opacity: stage >= 2 ? 1 : 0 }}
-          transition={{ duration: reduce ? 0.15 : 0.65, ease: pour }}
-        />
-        <motion.span
-          className="opening-name"
-          initial={false}
-          animate={{ opacity: stage >= 3 ? 1 : 0, y: stage >= 3 ? 0 : 18 }}
-          transition={{ duration: reduce ? 0.15 : 0.75, ease: settle }}
+          <motion.span
+            className="opening-kicker"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: at(0.9), ease: settle, delay: at(0.28) }}
+          >
+            Maître Chocolatier
+          </motion.span>
+          <span className="opening-rule" aria-hidden="true">
+            <motion.span
+              className="opening-line"
+              initial={{ scaleX: 0, opacity: 0 }}
+              animate={{ scaleX: 1, opacity: 1 }}
+              transition={{ duration: at(0.95), ease: settle, delay: at(0.48) }}
+            />
+            <motion.span
+              className="opening-drip"
+              initial={{ y: -34, scaleX: 0.72, scaleY: 1.45, opacity: 0 }}
+              animate={{ y: [-34, 3, 0], scaleX: [0.72, 1.14, 1], scaleY: [1.45, 0.86, 1], opacity: [0, 1, 1] }}
+              transition={{ duration: at(0.95), times: [0, 0.7, 1], ease: pour, delay: at(0.08) }}
+            >
+              <Drip />
+            </motion.span>
+          </span>
+          <motion.span
+            className="opening-name"
+            initial={{ opacity: 0, y: 18, filter: 'blur(12px)' }}
+            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            transition={{ duration: at(1.15), ease: settle, delay: at(0.72) }}
+          >
+            Bennis
+          </motion.span>
+        </motion.div>
+        <motion.button
+          type="button"
+          className="opening-enter"
+          initial={{ opacity: 0, y: 8 }}
+          animate={ready && !lift ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
+          transition={{ duration: at(0.45), ease: settle }}
+          aria-hidden={!ready || lift}
+          style={{ pointerEvents: ready && !lift ? 'auto' : 'none' }}
+          onClick={() => setLift(true)}
         >
-          Bennis
-        </motion.span>
-      </div>
-      {stage >= 3 && stage < 4 && (
-        <button type="button" className="opening-enter" onClick={() => setStage(4)}>
           Entrer
-        </button>
-      )}
-    </motion.div>
+        </motion.button>
+      </motion.div>
+    </MotionConfig>
   )
 }
 
@@ -302,27 +325,52 @@ function House() {
         <a className="secret-mark" href="/admin">
           <img src="/maison/wordmark.svg" alt="Maître Chocolatier Bennis" />
         </a>
-        <div>
-          <div className="footer-links">
-            <a href={config.managerInstagramUrl} target="_blank" rel="noopener noreferrer">
-              Instagram
-            </a>
-            <a href={`https://wa.me/${config.whatsappNumber}`} target="_blank" rel="noopener noreferrer">
-              +212 6 65 05 96 14
-            </a>
-          </div>
-          <a className="cat-gate" href="/catgardenmenu">
-            <span className="cat-paws" aria-hidden="true">
-              <PawPrint size={18} />
-              <PawPrint size={14} />
-              <PawPrint size={18} />
-            </span>
-            <span>
-              <small>Le café aux chats</small>
-              <strong>Cat’s Garden</strong>
-            </span>
+        <div className="footer-actions">
+          <a href={config.managerInstagramUrl} target="_blank" rel="noopener noreferrer">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <rect x="2" y="2" width="20" height="20" rx="5" />
+              <circle cx="12" cy="12" r="5" />
+              <circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none" />
+            </svg>
+            Suivez-nous
+          </a>
+          <a href={config.googleMapsUrl} target="_blank" rel="noopener noreferrer">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
+              <circle cx="12" cy="9" r="2.5" />
+            </svg>
+            Itinéraire
+          </a>
+          <a href={config.googleReviewsUrl} target="_blank" rel="noopener noreferrer">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" />
+            </svg>
+            Avis Google
+          </a>
+          <a href={`https://wa.me/${config.whatsappNumber}`} target="_blank" rel="noopener noreferrer">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 2a10 10 0 0 0-8.7 14.9L2 22l5.3-1.3A10 10 0 1 0 12 2zm5.2 14.2c-.2.6-1.2 1.1-1.7 1.2-.4.1-1 .2-1.6 0-.4-.1-.9-.2-1.5-.5-2.6-1.1-4.3-3.8-4.4-4-.1-.2-1-1.3-1-2.5s.6-1.8.9-2c.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.5.2.6.8 2 .8 2.1.1.2 0 .3-.1.5l-.3.4c-.1.1-.2.3-.1.5.2.4.8 1.3 1.7 2.1 1.2 1 2.1 1.4 2.5 1.5.2.1.4 0 .5-.1l.6-.7c.2-.2.3-.2.5-.1.2.1 1.5.7 1.8.8.2.1.4.2.5.3.1.3 0 .8-.2 1.2z" />
+            </svg>
+            WhatsApp
           </a>
         </div>
+        <a className="cat-gate" href="/catgardenmenu">
+          <span className="cat-paws" aria-hidden="true">
+            <PawPrint size={18} />
+            <PawPrint size={14} />
+            <PawPrint size={18} />
+          </span>
+          <span>
+            <small>Le café aux chats</small>
+            <strong>Cat’s Garden</strong>
+          </span>
+        </a>
+        <p className="footer-credit">
+          Cette boutique a été créée par l’équipe{' '}
+          <a href="https://bitaqa-project.vercel.app/fr" target="_blank" rel="noopener noreferrer">
+            Bitaqa
+          </a>
+        </p>
       </footer>
 
       <OrderDock cartOpen={cartOpen} onOpen={openCart} />

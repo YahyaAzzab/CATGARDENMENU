@@ -232,7 +232,7 @@ export const arCopy: Record<string, ArCopy> = {
   'dessert-brookie': { name: 'بروكي', description: 'نصف براوني ونصف كوكي' },
   'dessert-brownie': { name: 'براوني', description: 'براوني شوكولاتة ذائب' },
   'dessert-chocolat-glace': { name: 'شوكولاتة بالمثلجات', description: 'براوني مع كرة مثلجات' },
-  'dessert-cookies-pie': { name: 'تارت الكوكيز', description: 'تارت كوكي كبيرة بحبيبات الشوكولاتة' },
+  'dessert-cookies-pie': { name: 'كوكيز', description: 'تارت كوكي كبيرة بحبيبات الشوكولاتة' },
   'dessert-tiramisu': { name: 'تيراميسو', description: 'تيراميسو كريمي بالقهوة' },
   'dessert-san-sebastian-chocolat': { name: 'سان سيباستيان بالشوكولاتة', description: 'تشيز كيك باسكي بالشوكولاتة' },
   'dessert-san-sebastian-pistache': { name: 'سان سيباستيان بالفستق', description: 'تشيز كيك باسكي بالفستق' },

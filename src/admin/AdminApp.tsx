@@ -2,8 +2,8 @@ import { useEffect, useState, type FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase, supabaseEnv } from '../lib/supabase'
 import { isTheme, orderStatuses, themes, type OrderLine, type OrderStatus, type ThemeId } from '../maison/house'
-import { pastries, pastryImages } from '../maison/pastries'
-import { fetchPieces } from '../maison/piecesDb'
+import { pastries, pastryFallback, pastryImages } from '../maison/pastries'
+import { fetchPieces, missingImageColumn } from '../maison/piecesDb'
 import schemaSql from '../../supabase/schema.sql?raw'
 import './admin.css'
 
@@ -307,6 +307,33 @@ function Desk({
   )
 }
 
+const photoSql = 'alter table public.pieces add column if not exists image_url text;'
+
+function PhotoColumn() {
+  const [copied, setCopied] = useState(false)
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(photoSql)
+      setCopied(true)
+    } catch {
+      setCopied(false)
+    }
+  }
+  return (
+    <section className="schema-card">
+      <h2>Les photos</h2>
+      <p>
+        Une pièce sans photo enregistrée n’apparaît qu’avec une assiette vide dans la boutique. Dans Supabase,
+        ouvre SQL Editor, lance cette ligne, puis redépose la photo et enregistre.
+      </p>
+      <pre>{photoSql}</pre>
+      <button className="solid" type="button" onClick={copy}>
+        {copied ? 'Ligne copiée' : 'Copier la ligne'}
+      </button>
+    </section>
+  )
+}
+
 function fold(value: string) {
   return value
     .normalize('NFD')
@@ -359,6 +386,8 @@ function Pieces({ onReady }: { onReady: () => void }) {
   const [error, setError] = useState('')
   const [query, setQuery] = useState('')
   const [creating, setCreating] = useState(false)
+  const [openId, setOpenId] = useState<string | null>(null)
+  const [pendingDelete, setPendingDelete] = useState<string | null>(null)
   const [freshName, setFreshName] = useState('')
   const [freshDetail, setFreshDetail] = useState('')
   const [freshPrice, setFreshPrice] = useState('')
@@ -422,23 +451,42 @@ function Pieces({ onReady }: { onReady: () => void }) {
     setRows((current) => current?.map((row) => (row.id === id ? { ...row, ...patch } : row)) ?? null)
   }
 
+  const push = async (drafts: Draft[], mode: 'upsert' | 'insert' = 'upsert') => {
+    const client = supabase
+    if (!client) return 'failed' as const
+    const send = (withImage: boolean) => {
+      const payload = drafts.map((row) => rowPayload(row, withImage))
+      return mode === 'insert' ? client.from('pieces').insert(payload) : client.from('pieces').upsert(payload)
+    }
+    const first = await send(true)
+    if (!first.error) {
+      setHasImage(true)
+      return 'saved' as const
+    }
+    if (missingImageColumn(first.error)) {
+      const second = await send(false)
+      if (second.error) return 'failed' as const
+      setHasImage(false)
+      return 'photo' as const
+    }
+    return 'failed' as const
+  }
+
   const save = async (row: Draft) => {
-    if (!supabase) return
     const price = Math.round(Number(row.price))
     if (!row.name.trim() || !Number.isFinite(price) || price < 0) {
       setError('Le nom et le prix sont nécessaires.')
       return
     }
-    const payload = row.signature
-      ? (rows ?? [row]).map((item) =>
-          rowPayload(item.id === row.id ? row : { ...item, signature: false }, hasImage),
-        )
-      : [rowPayload({ ...row, price: String(price) }, hasImage)]
-    const { error: writeError } = await supabase.from('pieces').upsert(payload)
-    if (writeError) {
+    const next = row.signature
+      ? (rows ?? [row]).map((item) => (item.id === row.id ? { ...row, price: String(price) } : { ...item, signature: false }))
+      : [{ ...row, price: String(price) }]
+    const result = await push(next)
+    if (result === 'failed') {
       setError('L’enregistrement a échoué.')
       return
     }
+    setRows((current) => current?.map((item) => next.find((saved) => saved.id === item.id) ?? item) ?? null)
     setError('')
     setSavedId(row.id)
   }
@@ -452,15 +500,27 @@ function Pieces({ onReady }: { onReady: () => void }) {
     next.splice(nextIndex, 0, item)
     const ordered = next.map((row, sort) => ({ ...row, sort }))
     setRows(ordered)
-    const { error: writeError } = await supabase.from('pieces').upsert(ordered.map((row) => rowPayload(row, hasImage)))
-    if (writeError) setError('L’ordre n’a pas été enregistré.')
+    const result = await push(ordered)
+    if (result === 'failed') setError('L’ordre n’a pas été enregistré.')
+  }
+
+  const remove = async (id: string) => {
+    if (!supabase) return
+    const { error: writeError } = await supabase.from('pieces').delete().eq('id', id)
+    if (writeError) {
+      setError('La pièce n’a pas pu être retirée.')
+      return
+    }
+    setError('')
+    setPendingDelete(null)
+    setOpenId((current) => (current === id ? null : current))
+    setRows((current) => current?.filter((row) => row.id !== id) ?? null)
   }
 
   const create = async () => {
-    if (!supabase) return
     const price = Math.round(Number(freshPrice))
-    if (!freshName.trim() || !freshImage || !Number.isFinite(price) || price < 0) {
-      setError('Le nom, le prix et une image sont nécessaires.')
+    if (!freshName.trim() || !Number.isFinite(price) || price < 0) {
+      setError('Le nom et le prix sont nécessaires.')
       return
     }
     const id = pieceId(freshName, (rows ?? []).map((row) => row.id))
@@ -474,9 +534,9 @@ function Pieces({ onReady }: { onReady: () => void }) {
       sort: rows?.length ?? 0,
       imageUrl: freshImage,
     }
-    const { error: writeError } = await supabase.from('pieces').insert(rowPayload(created, hasImage))
-    if (writeError) {
-      setError(missingTable(writeError) ? 'missing' : 'La nouvelle pièce n’a pas pu être ajoutée.')
+    const result = await push([created], 'insert')
+    if (result === 'failed') {
+      setError('La nouvelle pièce n’a pas pu être ajoutée.')
       return
     }
     setFreshName('')
@@ -507,6 +567,7 @@ function Pieces({ onReady }: { onReady: () => void }) {
         </section>
       )}
       {error && error !== 'missing' && <p className="form-error">{error}</p>}
+      {!hasImage && <PhotoColumn />}
       <label className="piece-search">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <circle cx="10.5" cy="10.5" r="6.5" />
@@ -583,9 +644,41 @@ function Pieces({ onReady }: { onReady: () => void }) {
       {needle && shown.length === 0 && <p className="note">Aucune pièce pour cette recherche.</p>}
       {shown.map((row) => {
         const index = rows.findIndex((item) => item.id === row.id)
+        const thumb = row.imageUrl || pastryImages[row.id] || pastryFallback
+        const open = openId === row.id
         return (
-        <article className="piece-edit" key={row.id}>
-          <img src={row.imageUrl || pastryImages[row.id]} alt="" />
+        <div className={open ? 'piece-block is-open' : 'piece-block'} key={row.id}>
+          <div className="piece-row">
+            <button className="piece-open" type="button" onClick={() => setOpenId(open ? null : row.id)}>
+              <img src={thumb} alt="" />
+              <span>
+                <strong>{row.name || 'Sans nom'}</strong>
+                <small>
+                  {row.price || '0'} DH
+                  {row.signature ? ' · Populaire' : ''}
+                  {row.visible ? '' : ' · Masquée'}
+                  {!row.imageUrl && !pastryImages[row.id] ? ' · Sans photo' : ''}
+                </small>
+              </span>
+            </button>
+            {pendingDelete === row.id ? (
+              <span className="piece-confirm">
+                <button className="piece-remove is-sure" type="button" onClick={() => remove(row.id)}>
+                  Retirer
+                </button>
+                <button className="piece-remove" type="button" onClick={() => setPendingDelete(null)}>
+                  Annuler
+                </button>
+              </span>
+            ) : (
+              <button className="piece-remove" type="button" onClick={() => setPendingDelete(row.id)}>
+                Retirer
+              </button>
+            )}
+          </div>
+          {open && (
+        <article className="piece-edit">
+          <img src={thumb} alt="" />
           <div className="fields">
             <label>
               Nom
@@ -602,6 +695,20 @@ function Pieces({ onReady }: { onReady: () => void }) {
                 value={row.price}
                 onChange={(event) => update(row.id, { price: event.target.value })}
               />
+            </label>
+            <label className="file-pick">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(event) => {
+                  const file = event.target.files?.[0]
+                  if (!file) return
+                  void fileToDataUrl(file)
+                    .then((imageUrl) => update(row.id, { imageUrl }))
+                    .catch(() => setError('Cette image n’a pas pu être lue.'))
+                }}
+              />
+              <span>{row.imageUrl ? 'Changer la photo' : 'Déposer une photo'}</span>
             </label>
             <div className="choices">
               <Choice
@@ -647,6 +754,8 @@ function Pieces({ onReady }: { onReady: () => void }) {
             </div>
           </div>
         </article>
+          )}
+        </div>
         )
       })}
     </div>
