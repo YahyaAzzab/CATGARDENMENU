@@ -15,9 +15,10 @@ if (path === '/maison') {
 const menu = path === '/catgardenmenu'
 const admin = path === '/admin'
 
-const Root = lazy(() =>
-  admin ? import('./admin/AdminApp.tsx') : menu ? import('./App.tsx') : import('./maison/MaisonApp.tsx'),
-)
+const Admin = lazy(() => import('./admin/AdminApp.tsx'))
+const Menu = lazy(() => import('./App.tsx'))
+const Maison = lazy(() => import('./maison/MaisonApp.tsx'))
+const Root = admin ? Admin : menu ? Menu : Maison
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -325,6 +325,9 @@ function House() {
         </div>
       </footer>
 
+      <OrderDock cartOpen={cartOpen} onOpen={openCart} />
+      <ToTop hidden={cartOpen || !!pieceId} />
+
       <AnimatePresence>
         {piece && (
           <Sheet key={piece.id} pastry={piece} wide={wide} onClose={closeTop} />
@@ -543,6 +546,71 @@ function CartPanel({ wide, onClose }: { wide: boolean; onClose: () => void }) {
         </div>
       </motion.aside>
     </Overlay>
+  )
+}
+
+function OrderDock({ cartOpen, onOpen }: { cartOpen: boolean; onOpen: () => void }) {
+  const reduce = useReducedMotion()
+  const { lines, total } = useCart()
+  const shown = lines.slice(0, 3)
+  const extra = lines.length - shown.length
+
+  return (
+    <AnimatePresence>
+      {lines.length > 0 && !cartOpen && (
+        <motion.button
+          type="button"
+          className="order-dock"
+          aria-label={`Finaliser la commande, ${formatDh(total)}`}
+          onClick={onOpen}
+          initial={reduce ? false : { opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={reduce ? { opacity: 0 } : { opacity: 0, y: 14 }}
+          transition={{ duration: reduce ? 0.12 : 0.4, ease: settle }}
+        >
+          <span className="dock-copy">
+            <small>Votre commande</small>
+            <ul>
+              {shown.map((line) => (
+                <li key={line.pastry.id}>
+                  {line.qty > 1 ? `${line.qty} × ${line.pastry.name}` : line.pastry.name}
+                </li>
+              ))}
+            </ul>
+            {extra > 0 && <em>{extra > 1 ? `et ${extra} autres` : 'et 1 autre'}</em>}
+          </span>
+          <span className="dock-total">{formatDh(total)}</span>
+        </motion.button>
+      )}
+    </AnimatePresence>
+  )
+}
+
+function ToTop({ hidden }: { hidden: boolean }) {
+  const reduce = useReducedMotion()
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    const onScroll = () => setVisible(window.scrollY > 520)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  if (!visible || hidden) return null
+
+  return (
+    <button
+      type="button"
+      className="to-top"
+      aria-label="Remonter en haut"
+      onClick={() => window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' })}
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M12 19V6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+        <path d="M6 11l6-6 6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </button>
   )
 }
 

@@ -613,6 +613,99 @@
   color: var(--gold-deep);
 }
 
+.maison .order-dock {
+  position: fixed;
+  z-index: 36;
+  left: 18px;
+  bottom: calc(18px + env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  width: min(420px, calc(100% - 36px));
+  padding: 14px 18px 14px 20px;
+  border: 1px solid color-mix(in srgb, var(--gold-bright) 55%, transparent);
+  border-radius: 18px;
+  background: var(--night);
+  color: #f6efe4;
+  text-align: left;
+  box-shadow: 0 18px 40px rgba(26, 18, 14, 0.32);
+  cursor: pointer;
+}
+
+.dock-copy {
+  min-width: 0;
+}
+
+.order-dock small {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.64rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold-bright);
+}
+
+.order-dock ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.order-dock li,
+.order-dock em {
+  display: block;
+  overflow: hidden;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.2rem;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.order-dock em {
+  color: color-mix(in srgb, #f6efe4 70%, transparent);
+}
+
+.dock-total {
+  flex: none;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.85rem;
+  font-variant-numeric: lining-nums;
+  line-height: 1;
+  color: var(--gold-bright);
+}
+
+.maison .to-top {
+  position: fixed;
+  z-index: 32;
+  right: 18px;
+  bottom: calc(18px + env(safe-area-inset-bottom));
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border: 1px solid color-mix(in srgb, var(--gold-bright) 60%, transparent);
+  border-radius: 999px;
+  background: var(--night);
+  color: var(--gold-bright);
+  box-shadow: 0 12px 28px rgba(26, 18, 14, 0.28);
+  cursor: pointer;
+}
+
+@media (max-width: 720px) {
+  .maison .order-dock {
+    right: 18px;
+    width: auto;
+  }
+
+  .maison:has(.order-dock) .to-top {
+    bottom: calc(168px + env(safe-area-inset-bottom));
+  }
+}
+
 .empty {
   margin: 28px 0;
   font-weight: 300;
