@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase, supabaseEnv } from '../lib/supabase'
 import { isTheme, orderStatuses, themes, type OrderLine, type OrderStatus, type ThemeId } from '../maison/house'
@@ -31,6 +31,47 @@ type OrderRow = {
   status: OrderStatus
 }
 
+type ChangeReport = {
+  dirty: boolean
+  count: number
+  label: string
+  save: () => Promise<string | null>
+  discard: () => void
+}
+
+const ChangeContext = createContext<((id: string, change: ChangeReport) => void) | null>(null)
+
+function useChangeReport(
+  id: string,
+  label: string,
+  dirty: boolean,
+  count: number,
+  save: () => Promise<string | null>,
+  discard: () => void,
+) {
+  const report = useContext(ChangeContext)
+  const saveRef = useRef(save)
+  const discardRef = useRef(discard)
+  saveRef.current = save
+  discardRef.current = discard
+
+  useEffect(() => {
+    report?.(id, {
+      dirty,
+      count,
+      label,
+      save: () => saveRef.current(),
+      discard: () => discardRef.current(),
+    })
+  }, [report, id, label, dirty, count])
+}
+
+function phrase(labels: string[]) {
+  if (labels.length <= 1) return labels[0] ?? ''
+  if (labels.length === 2) return `${labels[0]} et ${labels[1]}`
+  return `${labels.slice(0, -1).join(', ')} et ${labels[labels.length - 1]}`
+}
+
 function pieceId(name: string, taken: string[]) {
   const base =
     name
@@ -61,6 +102,65 @@ function rowPayload(row: Draft, includeImage: boolean) {
   }
   if (!includeImage) return base
   return { ...base, image_url: row.imageUrl.trim() || null }
+}
+
+function pieceBodyChanged(a: Draft, b: Draft) {
+  return (
+    a.name !== b.name ||
+    a.detail !== b.detail ||
+    a.price !== b.price ||
+    a.signature !== b.signature ||
+    a.visible !== b.visible ||
+    a.imageUrl !== b.imageUrl
+  )
+}
+
+function diffPieces(saved: Draft[], rows: Draft[] | null) {
+  const touched: Draft[] = []
+  const removed: Draft[] = []
+  const dirtyIds = new Set<string>()
+  const freshIds = new Set<string>()
+  if (!rows) return { count: 0, touched, removed, dirtyIds, freshIds }
+  const savedById = new Map(saved.map((row) => [row.id, row]))
+  const currentIds = new Set(rows.map((row) => row.id))
+  let bodyCount = 0
+  let orderChanged = false
+  for (const row of saved) {
+    if (!currentIds.has(row.id)) removed.push(row)
+  }
+  for (const row of rows) {
+    const prev = savedById.get(row.id)
+    if (!prev) {
+      touched.push(row)
+      dirtyIds.add(row.id)
+      freshIds.add(row.id)
+      bodyCount += 1
+      continue
+    }
+    const body = pieceBodyChanged(prev, row)
+    const order = prev.sort !== row.sort
+    if (!body && !order) continue
+    touched.push(row)
+    dirtyIds.add(row.id)
+    if (body) bodyCount += 1
+    else orderChanged = true
+  }
+  return {
+    count: bodyCount + removed.length + (orderChanged ? 1 : 0),
+    touched,
+    removed,
+    dirtyIds,
+    freshIds,
+  }
+}
+
+function cleanDraft(row: Draft): Draft {
+  return {
+    ...row,
+    name: row.name.trim(),
+    detail: row.detail.trim(),
+    price: String(Math.round(Number(row.price)) || 0),
+  }
 }
 
 function fileToDataUrl(file: File) {
@@ -264,14 +364,62 @@ function Desk({
   onSchema: () => void
 }) {
   const [panel, setPanel] = useState<Panel>('pieces')
-  const [fresh, setFresh] = useState(0)
+  const [reports, setReports] = useState<Record<string, { dirty: boolean; count: number; label: string }>>({})
+  const [pending, setPending] = useState(false)
+  const [saveError, setSaveError] = useState('')
+  const actions = useRef(new Map<string, ChangeReport>())
+
+  const report = useCallback((id: string, change: ChangeReport) => {
+    actions.current.set(id, change)
+    setReports((current) => {
+      const prev = current[id]
+      if (prev && prev.dirty === change.dirty && prev.count === change.count && prev.label === change.label) return current
+      return { ...current, [id]: { dirty: change.dirty, count: change.count, label: change.label } }
+    })
+  }, [])
+
+  const dirty = Object.values(reports).filter((item) => item.dirty && item.count > 0)
+  const total = dirty.reduce((sum, item) => sum + item.count, 0)
+  const detail = phrase(dirty.map((item) => item.label))
+
+  useEffect(() => {
+    if (total === 0) return
+    const onLeave = (event: BeforeUnloadEvent) => {
+      event.preventDefault()
+      event.returnValue = ''
+    }
+    window.addEventListener('beforeunload', onLeave)
+    return () => window.removeEventListener('beforeunload', onLeave)
+  }, [total])
 
   const leave = async () => {
+    if (total > 0 && !window.confirm('Des modifications ne sont pas enregistrées. Quitter quand même ?')) return
     await supabase?.auth.signOut()
   }
 
+  const saveAll = async () => {
+    setPending(true)
+    setSaveError('')
+    let message = ''
+    for (const change of actions.current.values()) {
+      if (!change.dirty || change.count === 0) continue
+      const error = await change.save()
+      if (error) message = message || error
+    }
+    setSaveError(message)
+    setPending(false)
+  }
+
+  const discardAll = () => {
+    if (pending) return
+    for (const change of actions.current.values()) {
+      if (change.dirty && change.count > 0) change.discard()
+    }
+    setSaveError('')
+  }
+
   return (
-    <>
+    <ChangeContext.Provider value={report}>
       <header className="atelier-bar">
         <Brand />
         <div className="atelier-actions">
@@ -292,18 +440,41 @@ function Desk({
           Saisons
         </button>
       </nav>
-      <main className="atelier-main">
+      <main className={total > 0 ? 'atelier-main has-changes' : 'atelier-main'}>
         {needsSchema ? (
           <SchemaCard />
-        ) : panel === 'pieces' ? (
-          <Pieces onReady={onSchema} />
-        ) : panel === 'orders' ? (
-          <Orders key={fresh} />
         ) : (
-          <Themes onChange={() => setFresh((value) => value + 1)} />
+          <>
+            <div hidden={panel !== 'pieces'}>
+              <Pieces onReady={onSchema} />
+            </div>
+            <div hidden={panel !== 'orders'}>
+              <Orders />
+            </div>
+            <div hidden={panel !== 'themes'}>
+              <Themes />
+            </div>
+          </>
         )}
       </main>
-    </>
+      {total > 0 && (
+        <div className="save-dock" role="status" aria-live="polite">
+          <div className="save-dock-copy">
+            <strong>{total === 1 ? '1 modification' : `${total} modifications`}</strong>
+            <small>{detail}</small>
+            {saveError && <p className="form-error">{saveError}</p>}
+          </div>
+          <div className="save-dock-actions">
+            <button className="ghost-ink" type="button" onClick={discardAll} disabled={pending}>
+              Annuler
+            </button>
+            <button className="solid" type="button" onClick={saveAll} disabled={pending}>
+              {pending ? 'Enregistrement…' : 'Enregistrer'}
+            </button>
+          </div>
+        </div>
+      )}
+    </ChangeContext.Provider>
   )
 }
 
@@ -382,7 +553,7 @@ function Choice({
 
 function Pieces({ onReady }: { onReady: () => void }) {
   const [rows, setRows] = useState<Draft[] | null>(null)
-  const [savedId, setSavedId] = useState('')
+  const [saved, setSaved] = useState<Draft[]>([])
   const [error, setError] = useState('')
   const [query, setQuery] = useState('')
   const [creating, setCreating] = useState(false)
@@ -393,6 +564,8 @@ function Pieces({ onReady }: { onReady: () => void }) {
   const [freshPrice, setFreshPrice] = useState('')
   const [freshImage, setFreshImage] = useState('')
   const [hasImage, setHasImage] = useState(false)
+  const savedRef = useRef(saved)
+  savedRef.current = saved
 
   const load = async () => {
     const result = await fetchPieces()
@@ -409,18 +582,18 @@ function Pieces({ onReady }: { onReady: () => void }) {
     onReady()
     setHasImage(result.hasImage)
     setError('')
-    setRows(
-      result.rows.map((row) => ({
-        id: row.id,
-        name: row.name,
-        detail: row.detail,
-        price: String(row.price),
-        signature: row.signature,
-        visible: row.visible,
-        sort: row.sort,
-        imageUrl: row.image_url ?? '',
-      })),
-    )
+    const drafts = result.rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      detail: row.detail,
+      price: String(row.price),
+      signature: row.signature,
+      visible: row.visible,
+      sort: row.sort,
+      imageUrl: row.image_url ?? '',
+    }))
+    setRows(drafts)
+    setSaved(drafts.map((row) => ({ ...row })))
   }
 
   useEffect(() => {
@@ -472,52 +645,32 @@ function Pieces({ onReady }: { onReady: () => void }) {
     return 'failed' as const
   }
 
-  const save = async (row: Draft) => {
-    const price = Math.round(Number(row.price))
-    if (!row.name.trim() || !Number.isFinite(price) || price < 0) {
-      setError('Le nom et le prix sont nécessaires.')
-      return
-    }
-    const next = row.signature
-      ? (rows ?? [row]).map((item) => (item.id === row.id ? { ...row, price: String(price) } : { ...item, signature: false }))
-      : [{ ...row, price: String(price) }]
-    const result = await push(next)
-    if (result === 'failed') {
-      setError('L’enregistrement a échoué.')
-      return
-    }
-    setRows((current) => current?.map((item) => next.find((saved) => saved.id === item.id) ?? item) ?? null)
-    setError('')
-    setSavedId(row.id)
-  }
-
-  const move = async (index: number, direction: -1 | 1) => {
-    if (!rows || !supabase) return
+  const move = (index: number, direction: -1 | 1) => {
+    if (!rows) return
     const nextIndex = index + direction
     if (nextIndex < 0 || nextIndex >= rows.length) return
     const next = rows.slice()
     const [item] = next.splice(index, 1)
     next.splice(nextIndex, 0, item)
-    const ordered = next.map((row, sort) => ({ ...row, sort }))
-    setRows(ordered)
-    const result = await push(ordered)
-    if (result === 'failed') setError('L’ordre n’a pas été enregistré.')
+    setRows(next.map((row, sort) => ({ ...row, sort })))
   }
 
-  const remove = async (id: string) => {
-    if (!supabase) return
-    const { error: writeError } = await supabase.from('pieces').delete().eq('id', id)
-    if (writeError) {
-      setError('La pièce n’a pas pu être retirée.')
-      return
-    }
+  const remove = (id: string) => {
     setError('')
     setPendingDelete(null)
     setOpenId((current) => (current === id ? null : current))
     setRows((current) => current?.filter((row) => row.id !== id) ?? null)
   }
 
-  const create = async () => {
+  const clearFresh = () => {
+    setFreshName('')
+    setFreshDetail('')
+    setFreshPrice('')
+    setFreshImage('')
+    setCreating(false)
+  }
+
+  const create = () => {
     const price = Math.round(Number(freshPrice))
     if (!freshName.trim() || !Number.isFinite(price) || price < 0) {
       setError('Le nom et le prix sont nécessaires.')
@@ -534,19 +687,68 @@ function Pieces({ onReady }: { onReady: () => void }) {
       sort: rows?.length ?? 0,
       imageUrl: freshImage,
     }
-    const result = await push([created], 'insert')
-    if (result === 'failed') {
-      setError('La nouvelle pièce n’a pas pu être ajoutée.')
-      return
-    }
-    setFreshName('')
-    setFreshDetail('')
-    setFreshPrice('')
-    setFreshImage('')
-    setCreating(false)
+    setRows((current) => [...(current ?? []), created])
+    clearFresh()
     setError('')
-    await load()
+    setOpenId(id)
   }
+
+  const formStarted = creating && Boolean(freshName.trim() || freshDetail.trim() || freshPrice.trim() || freshImage)
+  const diff = useMemo(() => diffPieces(saved, rows), [saved, rows])
+  const changeCount = diff.count + (formStarted ? 1 : 0)
+
+  const pendingForm = (): Draft | 'invalid' | null => {
+    if (!formStarted) return null
+    const price = Math.round(Number(freshPrice))
+    if (!freshName.trim() || !Number.isFinite(price) || price < 0) return 'invalid'
+    return {
+      id: pieceId(freshName, (rows ?? []).map((row) => row.id)),
+      name: freshName.trim(),
+      detail: freshDetail.trim(),
+      price: String(price),
+      signature: false,
+      visible: true,
+      sort: rows?.length ?? 0,
+      imageUrl: freshImage,
+    }
+  }
+
+  const savePieces = async () => {
+    if (!rows || !supabase) return null
+    const extra = pendingForm()
+    if (extra === 'invalid') return 'Le nom et le prix sont nécessaires.'
+    const batch = extra ? [...diff.touched, extra] : diff.touched
+    for (const row of batch) {
+      const price = Math.round(Number(row.price))
+      if (!row.name.trim() || !Number.isFinite(price) || price < 0) return 'Le nom et le prix sont nécessaires.'
+    }
+    if (batch.length) {
+      const result = await push(batch.map(cleanDraft))
+      if (result === 'failed') return 'L’enregistrement a échoué.'
+    }
+    if (diff.removed.length) {
+      const { error: writeError } = await supabase.from('pieces').delete().in(
+        'id',
+        diff.removed.map((row) => row.id),
+      )
+      if (writeError) return 'Une pièce n’a pas pu être retirée.'
+    }
+    const next = (extra ? [...rows, extra] : rows).map(cleanDraft)
+    setRows(next)
+    setSaved(next.map((row) => ({ ...row })))
+    clearFresh()
+    setError('')
+    return null
+  }
+
+  const discardPieces = () => {
+    setRows(savedRef.current.map((row) => ({ ...row })))
+    clearFresh()
+    setError('')
+    setPendingDelete(null)
+  }
+
+  useChangeReport('pieces', 'Pièces', changeCount > 0, changeCount, savePieces, discardPieces)
 
   if (!rows) return <p className="note">Ouverture des pièces…</p>
   if (error === 'missing') return <SchemaCard />
@@ -658,6 +860,7 @@ function Pieces({ onReady }: { onReady: () => void }) {
                   {row.signature ? ' · Populaire' : ''}
                   {row.visible ? '' : ' · Masquée'}
                   {!row.imageUrl && !pastryImages[row.id] ? ' · Sans photo' : ''}
+                  {diff.freshIds.has(row.id) ? ' · nouvelle' : diff.dirtyIds.has(row.id) ? ' · modifiée' : ''}
                 </small>
               </span>
             </button>
@@ -747,10 +950,6 @@ function Pieces({ onReady }: { onReady: () => void }) {
               >
                 Descendre
               </button>
-              <button className="solid" type="button" onClick={() => save(row)}>
-                Enregistrer
-              </button>
-              {savedId === row.id && <span className="saved">Enregistré</span>}
             </div>
           </div>
         </article>
@@ -764,7 +963,10 @@ function Pieces({ onReady }: { onReady: () => void }) {
 
 function Orders() {
   const [rows, setRows] = useState<OrderRow[] | null>(null)
+  const [savedStatus, setSavedStatus] = useState<Record<string, OrderStatus>>({})
   const [error, setError] = useState('')
+  const savedRef = useRef(savedStatus)
+  savedRef.current = savedStatus
 
   useEffect(() => {
     if (!supabase) return
@@ -784,19 +986,43 @@ function Orders() {
           setRows([])
           return
         }
-        setRows((data ?? []) as OrderRow[])
+        const next = (data ?? []) as OrderRow[]
+        setRows(next)
+        setSavedStatus(Object.fromEntries(next.map((row) => [row.id, row.status])))
       })
   }, [])
 
-  const setStatus = async (id: string, status: OrderStatus) => {
-    if (!supabase) return
-    const { error: writeError } = await supabase.from('orders').update({ status }).eq('id', id)
-    if (writeError) {
-      setError('Le statut n’a pas été enregistré.')
-      return
-    }
+  const setStatus = (id: string, status: OrderStatus) => {
+    setError('')
     setRows((current) => current?.map((row) => (row.id === id ? { ...row, status } : row)) ?? null)
   }
+
+  const dirtyOrders = rows?.filter((row) => savedStatus[row.id] !== row.status) ?? []
+
+  const saveOrders = async () => {
+    if (!rows || !supabase) return null
+    const done: Record<string, OrderStatus> = {}
+    for (const row of rows) {
+      if (savedRef.current[row.id] === row.status) continue
+      const { error: writeError } = await supabase.from('orders').update({ status: row.status }).eq('id', row.id)
+      if (writeError) {
+        if (Object.keys(done).length) setSavedStatus((current) => ({ ...current, ...done }))
+        return 'Le statut n’a pas été enregistré.'
+      }
+      done[row.id] = row.status
+    }
+    setSavedStatus((current) => ({ ...current, ...done }))
+    setError('')
+    return null
+  }
+
+  const discardOrders = () => {
+    const baseline = savedRef.current
+    setRows((current) => current?.map((row) => ({ ...row, status: baseline[row.id] ?? row.status })) ?? null)
+    setError('')
+  }
+
+  useChangeReport('orders', 'Commandes', dirtyOrders.length > 0, dirtyOrders.length, saveOrders, discardOrders)
 
   if (!rows) return <p className="note">Ouverture des commandes…</p>
   if (error === 'missing') return <SchemaCard />
@@ -816,6 +1042,7 @@ function Orders() {
                   dateStyle: 'medium',
                   timeStyle: 'short',
                 })}
+                {savedStatus[row.id] !== row.status ? ' · non enregistrée' : ''}
               </p>
             </div>
             <select
@@ -845,9 +1072,13 @@ function Orders() {
   )
 }
 
-function Themes({ onChange }: { onChange: () => void }) {
+function Themes() {
   const [current, setCurrent] = useState<ThemeId>('maison')
+  const [savedTheme, setSavedTheme] = useState<ThemeId>('maison')
   const [error, setError] = useState('')
+  const savedRef = useRef(savedTheme)
+  const touched = useRef(false)
+  savedRef.current = savedTheme
 
   useEffect(() => {
     if (!supabase) return
@@ -861,21 +1092,36 @@ function Themes({ onChange }: { onChange: () => void }) {
           setError('missing')
           return
         }
-        if (data && typeof data.theme === 'string' && isTheme(data.theme)) setCurrent(data.theme)
+        const theme = data && typeof data.theme === 'string' && isTheme(data.theme) ? data.theme : 'maison'
+        setSavedTheme(theme)
+        if (!touched.current) setCurrent(theme)
       })
   }, [])
 
-  const choose = async (theme: ThemeId) => {
-    if (!supabase) return
-    setCurrent(theme)
-    const { error: writeError } = await supabase.from('house').upsert({ id: 'maison', theme })
-    if (writeError) {
-      setError(missingTable(writeError) ? 'missing' : 'Le thème n’a pas été enregistré.')
-      return
-    }
+  const choose = (theme: ThemeId) => {
+    touched.current = true
     setError('')
-    onChange()
+    setCurrent(theme)
   }
+
+  const themeDirty = current !== savedTheme
+
+  const saveTheme = async () => {
+    if (!supabase || current === savedRef.current) return null
+    const { error: writeError } = await supabase.from('house').upsert({ id: 'maison', theme: current })
+    if (writeError) return missingTable(writeError) ? 'La base n’est pas prête.' : 'Le thème n’a pas été enregistré.'
+    setSavedTheme(current)
+    setError('')
+    return null
+  }
+
+  const discardTheme = () => {
+    touched.current = false
+    setCurrent(savedRef.current)
+    setError('')
+  }
+
+  useChangeReport('themes', 'Saison', themeDirty, themeDirty ? 1 : 0, saveTheme, discardTheme)
 
   if (error === 'missing') return <SchemaCard />
 

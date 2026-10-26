@@ -131,6 +131,91 @@
   padding: 8px 22px 64px;
 }
 
+.atelier-main.has-changes {
+  padding-bottom: calc(148px + env(safe-area-inset-bottom));
+}
+
+.save-dock {
+  position: fixed;
+  z-index: 80;
+  left: 50%;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  display: grid;
+  gap: 12px;
+  width: min(520px, calc(100vw - 24px));
+  padding: 14px 14px 14px 18px;
+  border: 1px solid rgba(198, 163, 106, 0.45);
+  border-radius: 22px;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 18px 50px rgba(26, 18, 14, 0.45);
+  animation: dock-in 0.28s ease;
+}
+
+.save-dock-copy {
+  min-width: 0;
+}
+
+.save-dock-copy strong,
+.save-dock-copy small {
+  display: block;
+}
+
+.save-dock-copy strong {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.55rem;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.save-dock-copy small {
+  margin-top: 4px;
+  color: #8a6a3e;
+  font-size: 0.82rem;
+  font-weight: 300;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.save-dock-copy .form-error {
+  margin-top: 6px;
+  font-size: 0.82rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.save-dock-actions {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 8px;
+}
+
+.save-dock .ghost-ink,
+.save-dock .solid {
+  min-height: 46px;
+  width: 100%;
+}
+
+.save-dock .ghost-ink {
+  border: 1px solid rgba(60, 36, 21, 0.22);
+  background: transparent;
+  color: var(--ink);
+}
+
+@keyframes dock-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
 .gate {
   min-height: 100dvh;
   display: grid;
@@ -729,10 +814,30 @@
   }
 }
 
+@media (min-width: 560px) {
+  .save-dock {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    padding: 12px 12px 12px 18px;
+  }
+
+  .save-dock-actions {
+    grid-template-columns: auto auto;
+  }
+
+  .save-dock .ghost-ink,
+  .save-dock .solid {
+    width: auto;
+    padding: 0 18px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .choice,
-  .choice-check.is-on path {
+  .choice-check.is-on path,
+  .save-dock {
     transition: none;
+    animation: none;
   }
 
   .choice.is-on .choice-mark {
