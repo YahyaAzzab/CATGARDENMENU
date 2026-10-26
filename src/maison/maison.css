@@ -221,7 +221,6 @@
 }
 
 .vitrine {
-  position: relative;
   max-width: 1180px;
   margin: 0 auto;
   padding: 28px 22px 36px;
@@ -309,22 +308,13 @@
 }
 
 .maison-footer {
-  --ink: #3c2415;
-  --night: #1a120e;
-  --gold: #c6a36a;
-  --gold-bright: #e4c98a;
-  --gold-deep: #8a6a3e;
-  --cream: #f3e6d4;
-  --paper: #fbf6ef;
-  width: 100%;
-  margin: 0;
+  max-width: 1180px;
+  margin: 0 auto;
   padding: 36px 22px calc(40px + env(safe-area-inset-bottom));
   display: grid;
   justify-items: center;
   gap: 18px;
   text-align: center;
-  background: #f3e6d4;
-  color: var(--ink);
 }
 
 .secret-mark {
@@ -1012,45 +1002,31 @@
   --paper: #fbf7f1;
 }
 
-.maison[data-theme]:not([data-theme='maison']) main {
-  position: relative;
-  isolation: isolate;
-  background:
-    radial-gradient(ellipse 55% 42% at 80% 12%, rgba(198, 163, 106, 0.2), transparent 62%),
-    radial-gradient(ellipse 42% 30% at 10% 80%, rgba(126, 74, 42, 0.28), transparent 70%),
-    var(--night);
-}
-
-.maison[data-theme]:not([data-theme='maison']) main::before {
+.maison[data-theme]:not([data-theme='maison']) .hero::before {
   content: '';
   position: absolute;
-  inset: 0;
+  inset: 108px 0 0;
   z-index: 0;
   pointer-events: none;
-  background-repeat: repeat;
+  background-repeat: no-repeat;
   background-position: center top;
-  background-size: min(880px, 100%) auto;
+  background-size: 100% auto;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 46%, transparent 74%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 46%, transparent 74%);
 }
 
-.maison[data-theme]:not([data-theme='maison']) .hero,
-.maison[data-theme]:not([data-theme='maison']) .vitrine {
-  position: relative;
-  z-index: 1;
-  background: transparent;
-}
-
-.maison[data-theme='valentin'] main::before {
+.maison[data-theme='valentin'] .hero::before {
   background-image: url('/maison/seasons/valentin.svg');
 }
-.maison[data-theme='ramadan'] main::before {
+.maison[data-theme='ramadan'] .hero::before {
   background-image: url('/maison/seasons/ramadan.svg');
 }
-.maison[data-theme='ete'] main::before {
+.maison[data-theme='ete'] .hero::before {
   background-image: url('/maison/seasons/ete.svg');
 }
-.maison[data-theme='rentree'] main::before {
+.maison[data-theme='rentree'] .hero::before {
   background-image: url('/maison/seasons/rentree.svg');
 }
-.maison[data-theme='noel'] main::before {
+.maison[data-theme='noel'] .hero::before {
   background-image: url('/maison/seasons/noel.svg');
 }
