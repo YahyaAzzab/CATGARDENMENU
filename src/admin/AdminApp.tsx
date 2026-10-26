@@ -246,8 +246,7 @@ export default function AdminApp() {
 function Brand() {
   return (
     <a className="atelier-brand" href="/">
-      <small>Maître Chocolatier</small>
-      <strong>Bennis</strong>
+      <img src="/maison/wordmark-night.png" alt="Maître Chocolatier Bennis" />
     </a>
   )
 }
@@ -287,7 +286,7 @@ function Gate({
     <div className="gate">
       <div>
         <section className="gate-card">
-          <img className="gate-logo" src="/maison/wordmark.svg" alt="Maître Chocolatier Bennis" />
+          <img className="gate-logo" src="/maison/wordmark.png" alt="Maître Chocolatier Bennis" />
           <h1>L’atelier</h1>
           <p>Les pièces, les commandes et le thème de la boutique.</p>
           {offline ? (

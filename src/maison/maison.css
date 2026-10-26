@@ -58,36 +58,18 @@
 }
 
 .brand-link {
-  display: grid;
-  justify-items: start;
-  gap: 0.15rem;
+  display: block;
   border: 0;
-  padding: 4px 0 2px;
+  padding: 0;
   background: none;
   cursor: pointer;
-  line-height: 1;
-  color: #f6efe4;
+  line-height: 0;
 }
 
-.brand-kicker {
-  position: relative;
-  z-index: 1;
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: clamp(0.78rem, 2.6vw, 0.98rem);
-  font-weight: 600;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: #e4c98a;
-}
-
-.brand-name {
-  font-family: 'Monsieur La Doulaise', cursive;
-  font-size: clamp(2.35rem, 7vw, 3.15rem);
-  font-weight: 400;
-  line-height: 0.8;
-  margin-top: 0.72rem;
-  padding-inline-start: 10px;
-  color: #f6efe4;
+.brand-link img {
+  display: block;
+  width: clamp(148px, 40vw, 188px);
+  height: auto;
 }
 
 .cart-button {
@@ -126,7 +108,7 @@
   display: grid;
   align-items: center;
   gap: 22px;
-  padding: calc(148px + env(safe-area-inset-top)) 22px 42px;
+  padding: calc(176px + env(safe-area-inset-top)) 22px 42px;
   background:
     radial-gradient(ellipse 55% 70% at 78% 42%, rgba(198, 163, 106, 0.22), transparent 62%),
     radial-gradient(ellipse 40% 40% at 12% 80%, rgba(126, 74, 42, 0.35), transparent 70%),
@@ -319,13 +301,13 @@
 
 .secret-mark {
   display: block;
-  width: min(420px, 88vw);
+  width: min(300px, 76vw);
   line-height: 0;
   text-decoration: none;
 }
 
 .maison-footer img {
-  width: min(420px, 88vw);
+  width: min(300px, 76vw);
   height: auto;
 }
 
@@ -765,61 +747,12 @@
 .opening-mark {
   display: grid;
   justify-items: center;
-  gap: 0;
-  width: min(640px, 92vw);
-  color: #3c2415;
+  width: min(380px, 84vw);
 }
 
-.opening-kicker {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: clamp(1rem, 2.4vw, 1.35rem);
-  font-weight: 600;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-  color: #8a6a3e;
-}
-
-.opening-rule {
-  position: relative;
-  width: min(240px, 54vw);
-  height: 34px;
-  margin: 12px 0 0;
-}
-
-.opening-line {
-  position: absolute;
-  top: 8px;
-  left: 0;
+.opening-mark img {
   width: 100%;
-  height: 1.5px;
-  transform-origin: center;
-  background: linear-gradient(90deg, transparent, #c6a36a 16%, #e4c98a 50%, #c6a36a 84%, transparent);
-}
-
-.opening-drip {
-  position: absolute;
-  top: 4px;
-  left: calc(50% - 8px);
-  width: 16px;
-  height: 22px;
-  color: #c6a36a;
-  transform-origin: top center;
-  filter: drop-shadow(0 8px 8px rgba(138, 106, 62, 0.22));
-}
-
-.opening-drip svg {
-  display: block;
-  width: 16px;
-  height: 22px;
-}
-
-.opening-name {
-  font-family: 'Monsieur La Doulaise', cursive;
-  font-size: clamp(4.6rem, 14vw, 7.5rem);
-  line-height: 1;
-  margin-top: 0.55rem;
-  padding-top: 0.42em;
-  padding-inline-start: 0.12em;
+  height: auto;
 }
 
 .opening-enter {
@@ -870,7 +803,7 @@
   .hero {
     grid-template-columns: 1.15fr 0.85fr;
     align-items: center;
-    padding: calc(136px + env(safe-area-inset-top)) 64px 48px 72px;
+    padding: calc(188px + env(safe-area-inset-top)) 64px 48px 72px;
   }
 
   .vitrine,

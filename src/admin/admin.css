@@ -42,26 +42,15 @@
 }
 
 .atelier-brand {
-  display: grid;
-  line-height: 1;
-  color: #f6efe4;
+  display: block;
+  line-height: 0;
   text-decoration: none;
 }
 
-.atelier-brand small {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 0.78rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--gold-bright);
-}
-
-.atelier-brand strong {
-  font-family: 'Monsieur La Doulaise', cursive;
-  font-size: 2.4rem;
-  font-weight: 400;
-  line-height: 0.8;
-  margin-top: 0.7rem;
+.atelier-brand img {
+  display: block;
+  width: clamp(148px, 40vw, 188px);
+  height: auto;
 }
 
 .swatch-maison { background: linear-gradient(140deg, #1a120e, #c6a36a); }
@@ -240,8 +229,9 @@
 
 .gate-logo {
   display: block;
-  width: min(100%, 320px);
+  width: min(100%, 240px);
   height: auto;
+  margin: 0 auto;
 }
 
 .gate-card h1 {

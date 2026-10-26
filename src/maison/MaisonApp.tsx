@@ -5,7 +5,7 @@ import { PawPrint } from '../components/Icons'
 import { CartProvider, orderHref, useCart } from './cart'
 import { CatalogProvider, useCatalog } from './catalog'
 import { rememberOrder } from './orders'
-import { pour, settle } from './motion'
+import { settle } from './motion'
 import { formatDh, type Pastry } from './pastries'
 import './maison.css'
 
@@ -82,38 +82,13 @@ function Opening({
           animate={lift ? { opacity: 0, y: -28 } : { opacity: 1, y: 0 }}
           transition={{ duration: at(0.7), ease: settle }}
         >
-          <motion.span
-            className="opening-kicker"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: at(0.9), ease: settle, delay: at(0.28) }}
-          >
-            Maître Chocolatier
-          </motion.span>
-          <span className="opening-rule" aria-hidden="true">
-            <motion.span
-              className="opening-line"
-              initial={{ scaleX: 0, opacity: 0 }}
-              animate={{ scaleX: 1, opacity: 1 }}
-              transition={{ duration: at(0.95), ease: settle, delay: at(0.48) }}
-            />
-            <motion.span
-              className="opening-drip"
-              initial={{ y: -34, scaleX: 0.72, scaleY: 1.45, opacity: 0 }}
-              animate={{ y: [-34, 3, 0], scaleX: [0.72, 1.14, 1], scaleY: [1.45, 0.86, 1], opacity: [0, 1, 1] }}
-              transition={{ duration: at(0.95), times: [0, 0.7, 1], ease: pour, delay: at(0.08) }}
-            >
-              <Drip />
-            </motion.span>
-          </span>
-          <motion.span
-            className="opening-name"
-            initial={{ opacity: 0, y: 18, filter: 'blur(12px)' }}
+          <motion.img
+            src="/maison/wordmark.png"
+            alt="Maître Chocolatier Bennis"
+            initial={{ opacity: 0, y: 16, filter: 'blur(10px)' }}
             animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            transition={{ duration: at(1.15), ease: settle, delay: at(0.72) }}
-          >
-            Bennis
-          </motion.span>
+            transition={{ duration: at(1.15), ease: settle, delay: at(0.2) }}
+          />
         </motion.div>
         <motion.button
           type="button"
@@ -263,8 +238,7 @@ function House() {
     <div className="maison" data-theme={theme}>
       <header className={scrolled ? 'maison-header is-scrolled' : 'maison-header'}>
         <button type="button" className="brand-link" onClick={goTop} aria-label="Maître Chocolatier Bennis">
-          <span className="brand-kicker">Maître Chocolatier</span>
-          <span className="brand-name">Bennis</span>
+          <img src="/maison/wordmark-night.png" alt="" />
         </button>
         <button
           type="button"
@@ -323,7 +297,7 @@ function House() {
 
       <footer className="maison-footer">
         <a className="secret-mark" href="/admin">
-          <img src="/maison/wordmark.svg" alt="Maître Chocolatier Bennis" />
+          <img src="/maison/wordmark.png" alt="Maître Chocolatier Bennis" />
         </a>
         <div className="footer-actions">
           <a href={config.managerInstagramUrl} target="_blank" rel="noopener noreferrer">
