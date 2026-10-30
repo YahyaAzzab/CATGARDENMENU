@@ -211,7 +211,25 @@ function DeferredSheet({
   return <Sheet item={item} onClose={onClose} />;
 }
 
+function useMenuMeow() {
+  useEffect(() => {
+    const audio = new Audio('/maison/meow.wav');
+    audio.volume = 0.55;
+    const onClick = () => {
+      try {
+        audio.currentTime = 0;
+        void audio.play().catch(() => {});
+      } catch {
+        /* le clic continue même si le son est bloqué */
+      }
+    };
+    document.addEventListener('click', onClick);
+    return () => document.removeEventListener('click', onClick);
+  }, []);
+}
+
 export default function App() {
+  useMenuMeow();
   const skipSplash =
     typeof window !== 'undefined' && sessionStorage.getItem('catsgarden_splash') === '1';
   const [phase, setPhase] = useState<'splash' | 'fly' | 'done'>(skipSplash ? 'done' : 'splash');

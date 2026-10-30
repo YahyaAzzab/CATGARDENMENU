@@ -433,11 +433,9 @@ html.is-maison :focus-visible {
 
 .invite-mark {
   flex: none;
-  font-family: 'Monsieur La Doulaise', cursive;
-  font-size: 2rem;
-  line-height: 0.75;
-  color: #f6efe4;
-  padding-inline-start: 8px;
+  display: block;
+  width: 72px;
+  height: auto;
 }
 
 .boutique-invite span {

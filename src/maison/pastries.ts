@@ -1,10 +1,12 @@
-import pistache from '../assets/items/dessert-san-sebastian-pistache.jpg'
-import chocolat from '../assets/items/dessert-san-sebastian-chocolat.jpg'
+import painPerdu from '../assets/items/dessert-pain-perdu.jpg'
+import sanSebastianChocolat from '../assets/items/dessert-san-sebastian-chocolat.jpg'
+import sanSebastianPistache from '../assets/items/dessert-san-sebastian-pistache.jpg'
 import tiramisu from '../assets/items/dessert-tiramisu.jpg'
 import brookie from '../assets/items/dessert-brookie.jpg'
 import brownie from '../assets/items/dessert-brownie.jpg'
-import cookies from '../assets/items/dessert-cookies-pie.jpg'
-import croissant from '../assets/items/dessert-croissant-four.jpg'
+import chocolatGlace from '../assets/items/dessert-chocolat-glace.jpg'
+import type { CategoryId } from './categories'
+import type { MomentId } from './moment'
 
 export type Pastry = {
   id: string
@@ -12,74 +14,315 @@ export type Pastry = {
   detail: string
   price: number
   image: string
+  category: CategoryId
   signature?: boolean
   visible?: boolean
   sort?: number
+  /** Moments de la journée où la pièce part le plus vite. */
+  moments?: MomentId[]
+  /** Force de vente relative (0–100), utilisée pour le rail des populaires. */
+  pull?: number
 }
 
 export const pastryFallback = '/maison/plate.svg'
 
 export const pastryImages: Record<string, string> = {
-  'san-sebastian-pistache': pistache,
-  'san-sebastian-chocolat': chocolat,
+  'tablette-grand-cru-70': '/maison/pieces/tablette-noir.jpg',
+  'tablette-lait-caramel': '/maison/pieces/tablette-lait.jpg',
+  'tablette-ambato': '/maison/pieces/tablette-ambato.jpg',
+  'rocher-noisette': '/maison/pieces/praline-rocher.jpg',
+  'ganache-framboise': '/maison/pieces/praline-framboise.jpg',
+  'praline-pistache': '/maison/pieces/praline-pistache.jpg',
+  'palet-or': '/maison/pieces/praline-or.jpg',
+  'pain-chocolat': painPerdu,
+  'crepe-chocolat': chocolatGlace,
+  'millefeuille': painPerdu,
+  'gateau-anniversaire': sanSebastianChocolat,
+  'piece-montee': sanSebastianPistache,
+  'san-sebastian-chocolat': sanSebastianChocolat,
   tiramisu,
   brookie,
   brownie,
-  'tarte-cookies': cookies,
-  'croissant-four': croissant,
+  'cookie-pie': brookie,
+  'san-sebastian-pistache': sanSebastianPistache,
+  'dome-chocolat': '/maison/pieces/dome-chocolat.jpg',
+  'coeur-coulant': '/maison/pieces/coeur-coulant.jpg',
+  'fondant-glace': chocolatGlace,
+  'coffret-decouverte': '/maison/pieces/coffret-decouverte.jpg',
+  'boite-prestige': '/maison/pieces/boite-prestige.jpg',
+  'assortiment-fes': '/maison/pieces/assortiment-fes.jpg',
 }
 
-/** Prix de départ de la vitrine, distincts de ceux du café. À confirmer avant l’ouverture. */
+/**
+ * Catalogue vitrine du maître chocolatier : pièces de démonstration, avec la
+ * photo fournie par la maison. Le patron remplace noms, prix et photos depuis
+ * l’atelier (/admin) — le catalogue ci-dessous sert de visuel de départ.
+ */
 export const pastries: Pastry[] = [
+  // ─── Tablettes ───────────────────────────────────────────────
   {
-    id: 'san-sebastian-pistache',
-    name: 'San Sebastian pistache',
-    detail: 'Cheesecake basque à la pistache',
-    price: 90,
-    image: pistache,
+    id: 'tablette-grand-cru-70',
+    name: 'Tablette grand cru 70 %',
+    detail: 'Cacao du Piémont, torréfié et conché à l’atelier.',
+    price: 85,
+    image: pastryImages['tablette-grand-cru-70'],
+    category: 'tablettes',
+    moments: ['gouter', 'soir', 'nuit'],
+    pull: 92,
+    sort: 0,
+  },
+  {
+    id: 'tablette-lait-caramel',
+    name: 'Tablette lait caramel fleur de sel',
+    detail: 'Lait fin, caramel beurre salé, éclats croustillants.',
+    price: 80,
+    image: pastryImages['tablette-lait-caramel'],
+    category: 'tablettes',
+    moments: ['gouter', 'soir'],
+    pull: 78,
+    sort: 1,
+  },
+  {
+    id: 'tablette-ambato',
+    name: 'Tablette Ambato Équateur',
+    detail: 'Origine unique, cacao floral 72 %, longue finale.',
+    price: 95,
+    image: pastryImages['tablette-ambato'],
+    category: 'tablettes',
+    moments: ['midi', 'soir', 'nuit'],
+    pull: 86,
+    sort: 2,
+  },
+
+  // ─── Pralinés ────────────────────────────────────────────────
+  {
+    id: 'rocher-noisette',
+    name: 'Rocher praliné noisette',
+    detail: 'Praliné maison, noisette torréfiée, coque fine.',
+    price: 18,
+    image: pastryImages['rocher-noisette'],
+    category: 'pralines',
     signature: true,
+    moments: ['soir', 'nuit'],
+    pull: 95,
+    sort: 10,
+  },
+  {
+    id: 'ganache-framboise',
+    name: 'Ganache framboise',
+    detail: 'Cœur fruité, ganache noire, acidité vive.',
+    price: 18,
+    image: pastryImages['ganache-framboise'],
+    category: 'pralines',
+    moments: ['gouter', 'soir'],
+    pull: 80,
+    sort: 11,
+  },
+  {
+    id: 'praline-pistache',
+    name: 'Praliné pistache de Sicile',
+    detail: 'Pâte de pistache, croustillant, équilibre lait-noir.',
+    price: 20,
+    image: pastryImages['praline-pistache'],
+    category: 'pralines',
+    moments: ['midi', 'gouter', 'soir'],
+    pull: 88,
+    sort: 12,
+  },
+  {
+    id: 'palet-or',
+    name: 'Palet or cacao',
+    detail: 'Ganache veloutée, feuille d’or, bouchée signature.',
+    price: 22,
+    image: pastryImages['palet-or'],
+    category: 'pralines',
+    moments: ['soir', 'nuit'],
+    pull: 84,
+    sort: 13,
+  },
+
+  // ─── Pâtisseries ─────────────────────────────────────────────
+  {
+    id: 'pain-chocolat',
+    name: 'Pain au chocolat',
+    detail: 'Feuilletage pur beurre, deux barres de chocolat noir.',
+    price: 18,
+    image: pastryImages['pain-chocolat'],
+    category: 'patisseries',
+    moments: ['matin'],
+    pull: 84,
+    sort: 20,
+  },
+  {
+    id: 'crepe-chocolat',
+    name: 'Tagliatelles de crêpe au chocolat',
+    detail: 'Crêpe au chocolat et glace vanille.',
+    price: 55,
+    image: pastryImages['crepe-chocolat'],
+    category: 'patisseries',
+    moments: ['gouter', 'soir'],
+    pull: 94,
+    sort: 21,
   },
   {
     id: 'san-sebastian-chocolat',
     name: 'San Sebastian chocolat',
-    detail: 'Cheesecake basque au chocolat',
+    detail: 'Cheesecake basque au chocolat, cœur coulant.',
     price: 70,
-    image: chocolat,
+    image: pastryImages['san-sebastian-chocolat'],
+    category: 'patisseries',
+    moments: ['gouter', 'soir'],
+    pull: 90,
+    sort: 22,
   },
   {
     id: 'tiramisu',
-    name: 'Tiramisu',
-    detail: 'Tiramisu crémeux au café',
+    name: 'Tiramisu cacao',
+    detail: 'Mascarpone, café serré et cacao amer.',
     price: 45,
-    image: tiramisu,
+    image: pastryImages.tiramisu,
+    category: 'patisseries',
+    moments: ['soir', 'nuit'],
+    pull: 82,
+    sort: 23,
   },
   {
     id: 'brookie',
     name: 'Brookie',
-    detail: 'Mi-brownie, mi-cookie',
+    detail: 'Mi-brownie, mi-cookie, chocolat noir intense.',
     price: 55,
-    image: brookie,
+    image: pastryImages.brookie,
+    category: 'patisseries',
+    moments: ['gouter', 'soir', 'nuit'],
+    pull: 86,
+    sort: 24,
   },
   {
     id: 'brownie',
-    name: 'Brownie',
-    detail: 'Brownie fondant au chocolat',
+    name: 'Brownie fondant',
+    detail: 'Fondant au chocolat noir, noix de pécan.',
     price: 40,
-    image: brownie,
+    image: pastryImages.brownie,
+    category: 'patisseries',
+    moments: ['gouter', 'soir'],
+    pull: 76,
+    sort: 25,
   },
   {
-    id: 'tarte-cookies',
-    name: 'Cookies',
-    detail: 'Tarte cookie géante aux pépites de chocolat',
+    id: 'cookie-pie',
+    name: 'Cookie pie',
+    detail: 'Cookie géant aux pépites de chocolat, à partager.',
     price: 50,
-    image: cookies,
+    image: pastryImages['cookie-pie'],
+    category: 'patisseries',
+    moments: ['gouter', 'soir'],
+    pull: 96,
+    sort: 26,
+  },
+
+  // ─── Entremets ───────────────────────────────────────────────
+  {
+    id: 'san-sebastian-pistache',
+    name: 'San Sebastian pistache',
+    detail: 'Cheesecake basque à la pistache de Sicile.',
+    price: 90,
+    image: pastryImages['san-sebastian-pistache'],
+    category: 'entremets',
+    signature: true,
+    moments: ['gouter', 'soir'],
+    pull: 92,
+    sort: 30,
   },
   {
-    id: 'croissant-four',
-    name: 'Croissant au four',
-    detail: 'Croissant doré au four, Nutella et caramel',
-    price: 48,
-    image: croissant,
+    id: 'dome-chocolat',
+    name: 'Dôme chocolat noir',
+    detail: 'Mousse intense, croustillant praliné, miroir brillant.',
+    price: 75,
+    image: pastryImages['dome-chocolat'],
+    category: 'entremets',
+    moments: ['soir', 'nuit'],
+    pull: 88,
+    sort: 31,
+  },
+  {
+    id: 'coeur-coulant',
+    name: 'Cœur coulant cacao',
+    detail: 'Moelleux tiède, cœur cacao fondant.',
+    price: 55,
+    image: pastryImages['coeur-coulant'],
+    category: 'entremets',
+    moments: ['soir', 'nuit'],
+    pull: 90,
+    sort: 32,
+  },
+  {
+    id: 'millefeuille',
+    name: 'Millefeuille de mariage',
+    detail: 'Feuilletage, crème et cacao pour les grandes tables.',
+    price: 180,
+    image: pastryImages.millefeuille,
+    category: 'entremets',
+    moments: ['soir', 'nuit'],
+    pull: 90,
+    sort: 33,
+  },
+  {
+    id: 'gateau-anniversaire',
+    name: 'Gâteau d’anniversaire chocolat',
+    detail: 'Pièce chocolat pour les anniversaires.',
+    price: 220,
+    image: pastryImages['gateau-anniversaire'],
+    category: 'entremets',
+    moments: ['soir', 'nuit'],
+    pull: 93,
+    sort: 34,
+  },
+  {
+    id: 'piece-montee',
+    name: 'Pièce montée',
+    detail: 'Wedding cake de la maison, sur commande.',
+    price: 480,
+    image: pastryImages['piece-montee'],
+    category: 'entremets',
+    signature: true,
+    moments: ['nuit', 'soir'],
+    pull: 88,
+    sort: 35,
+  },
+
+  // ─── Coffrets ────────────────────────────────────────────────
+  {
+    id: 'coffret-decouverte',
+    name: 'Coffret découverte',
+    detail: '9 bouchées pour découvrir la maison.',
+    price: 160,
+    image: pastryImages['coffret-decouverte'],
+    category: 'coffrets',
+    moments: ['midi', 'soir'],
+    pull: 84,
+    sort: 40,
+  },
+  {
+    id: 'boite-prestige',
+    name: 'Boîte prestige',
+    detail: '16 pièces d’exception, assortiment du chef.',
+    price: 280,
+    image: pastryImages['boite-prestige'],
+    category: 'coffrets',
+    moments: ['soir'],
+    pull: 74,
+    sort: 41,
+  },
+  {
+    id: 'assortiment-fes',
+    name: 'Assortiment Fès',
+    detail: 'Tablette et pralinés, écrin pour offrir.',
+    price: 220,
+    image: pastryImages['assortiment-fes'],
+    category: 'coffrets',
+    moments: ['soir', 'nuit'],
+    pull: 80,
+    sort: 42,
   },
 ]
 

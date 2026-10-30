@@ -2,25 +2,44 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { Session } from '@supabase/supabase-js'
 import { supabase, supabaseEnv } from '../lib/supabase'
 import { isTheme, orderStatuses, themes, type OrderLine, type OrderStatus, type ThemeId } from '../maison/house'
-import { pastries, pastryFallback, pastryImages } from '../maison/pastries'
-import { fetchPieces, missingImageColumn } from '../maison/piecesDb'
+import {
+  categoriesMigrationSql,
+  fetchCategories,
+  persistCategories,
+  setCategoryList,
+  useCategoryList,
+} from '../maison/categoriesDb'
+import { defaultCategoryArt, defaultCategoryPhoto, type Category } from '../maison/categories'
+import { moments, orderedMoments, type MomentId } from '../maison/moment'
+import { pastryFallback, pastryImages } from '../maison/pastries'
+import {
+  clearPieceMeta,
+  pieceCategoryUsage,
+  setPieceCategoryUsage,
+  usePieceCategoryUsage,
+  writePieceMeta,
+} from '../maison/pieceMeta'
+import { constraintViolation, fetchPieces, missingColumn } from '../maison/piecesDb'
+import { adminDrafts } from '../maison/vitrine'
 import schemaSql from '../../supabase/schema.sql?raw'
 import './admin.css'
 
 const FONT_HREF =
   'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600&family=Monsieur+La+Doulaise&family=Outfit:wght@300;400;500&display=swap'
 
-type Panel = 'pieces' | 'orders' | 'themes'
+type Panel = 'pieces' | 'orders' | 'categories' | 'themes'
 
 type Draft = {
   id: string
   name: string
   detail: string
   price: string
+  category: string
   signature: boolean
   visible: boolean
   sort: number
   imageUrl: string
+  moments: MomentId[]
 }
 
 type OrderRow = {
@@ -90,8 +109,8 @@ function pieceId(name: string, taken: string[]) {
   return id
 }
 
-function rowPayload(row: Draft, includeImage: boolean) {
-  const base = {
+function rowPayload(row: Draft, includeImage: boolean, includeCategory: boolean, includeMoments: boolean) {
+  const base: Record<string, unknown> = {
     id: row.id,
     name: row.name.trim(),
     detail: row.detail.trim(),
@@ -100,8 +119,16 @@ function rowPayload(row: Draft, includeImage: boolean) {
     visible: row.visible,
     sort: row.sort,
   }
-  if (!includeImage) return base
-  return { ...base, image_url: row.imageUrl.trim() || null }
+  if (includeCategory) base.category = row.category
+  if (includeImage) base.image_url = row.imageUrl.trim() || null
+  if (includeMoments) base.moments = orderedMoments(row.moments)
+  return base
+}
+
+function sameMoments(a: MomentId[], b: MomentId[]) {
+  const left = orderedMoments(a)
+  const right = orderedMoments(b)
+  return left.length === right.length && left.every((id, index) => id === right[index])
 }
 
 function pieceBodyChanged(a: Draft, b: Draft) {
@@ -109,10 +136,17 @@ function pieceBodyChanged(a: Draft, b: Draft) {
     a.name !== b.name ||
     a.detail !== b.detail ||
     a.price !== b.price ||
+    a.category !== b.category ||
     a.signature !== b.signature ||
     a.visible !== b.visible ||
-    a.imageUrl !== b.imageUrl
+    a.imageUrl !== b.imageUrl ||
+    !sameMoments(a.moments, b.moments)
   )
+}
+
+function toggleMoment(current: MomentId[], id: MomentId): MomentId[] {
+  const next = current.includes(id) ? current.filter((item) => item !== id) : [...current, id]
+  return orderedMoments(next)
 }
 
 function diffPieces(saved: Draft[], rows: Draft[] | null) {
@@ -286,6 +320,9 @@ function Gate({
     <div className="gate">
       <div>
         <section className="gate-card">
+          <a className="gate-back" href="/">
+            Retour
+          </a>
           <img className="gate-logo" src="/maison/wordmark.png" alt="Maître Chocolatier Bennis" />
           <h1>L’atelier</h1>
           <p>Les pièces, les commandes et le thème de la boutique.</p>
@@ -432,6 +469,9 @@ function Desk({
         <button type="button" className={panel === 'pieces' ? 'is-on' : ''} onClick={() => setPanel('pieces')}>
           Pièces
         </button>
+        <button type="button" className={panel === 'categories' ? 'is-on' : ''} onClick={() => setPanel('categories')}>
+          Catégories
+        </button>
         <button type="button" className={panel === 'orders' ? 'is-on' : ''} onClick={() => setPanel('orders')}>
           Commandes
         </button>
@@ -440,21 +480,19 @@ function Desk({
         </button>
       </nav>
       <main className={total > 0 ? 'atelier-main has-changes' : 'atelier-main'}>
-        {needsSchema ? (
-          <SchemaCard />
-        ) : (
-          <>
-            <div hidden={panel !== 'pieces'}>
-              <Pieces onReady={onSchema} />
-            </div>
-            <div hidden={panel !== 'orders'}>
-              <Orders />
-            </div>
-            <div hidden={panel !== 'themes'}>
-              <Themes />
-            </div>
-          </>
-        )}
+        {needsSchema && <SchemaCard />}
+        <div hidden={panel !== 'pieces'}>
+          <Pieces onReady={onSchema} />
+        </div>
+        <div hidden={panel !== 'categories'}>
+          <CategoriesPanel />
+        </div>
+        <div hidden={panel !== 'orders'}>
+          <Orders />
+        </div>
+        <div hidden={panel !== 'themes'}>
+          <Themes />
+        </div>
       </main>
       {total > 0 && (
         <div className="save-dock" role="status" aria-live="polite">
@@ -478,7 +516,6 @@ function Desk({
 }
 
 const photoSql = 'alter table public.pieces add column if not exists image_url text;'
-
 function PhotoColumn() {
   const [copied, setCopied] = useState(false)
   const copy = async () => {
@@ -501,6 +538,71 @@ function PhotoColumn() {
         {copied ? 'Ligne copiée' : 'Copier la ligne'}
       </button>
     </section>
+  )
+}
+
+function VitrineColumns() {
+  const [copied, setCopied] = useState(false)
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(categoriesMigrationSql)
+      setCopied(true)
+    } catch {
+      setCopied(false)
+    }
+  }
+  return (
+    <section className="schema-card">
+      <h2>Enregistrement dans la base</h2>
+      <p>
+        Supabase bloque encore l’écriture des pièces. Ouvre SQL Editor, lance ce script, puis clique à nouveau
+        sur Enregistrer dans la base.
+      </p>
+      <pre>{categoriesMigrationSql}</pre>
+      <button className="solid" type="button" onClick={copy}>
+        {copied ? 'Script copié' : 'Copier le script'}
+      </button>
+    </section>
+  )
+}
+
+function MomentField({ value, onChange }: { value: MomentId[]; onChange: (next: MomentId[]) => void }) {
+  return (
+    <fieldset className="moment-field">
+      <legend>Moment de la journée</legend>
+      <div className="moment-options">
+        {moments.map((moment) => (
+          <label key={moment.id} className="moment-option">
+            <input
+              type="checkbox"
+              checked={value.includes(moment.id)}
+              onChange={() => onChange(toggleMoment(value, moment.id))}
+            />
+            <span>{moment.label}</span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  )
+}
+
+function CategorySelect({ value, onChange }: { value: string; onChange: (next: string) => void }) {
+  const list = useCategoryList()
+  const options =
+    list.some((item) => item.id === value) || !value
+      ? list
+      : [...list, { id: value, name: value, blurb: '', art: defaultCategoryArt, photo: defaultCategoryPhoto, sort: 999 }]
+  return (
+    <label>
+      Catégorie
+      <select value={value} onChange={(event) => onChange(event.target.value)}>
+        {options.map((category) => (
+          <option key={category.id} value={category.id}>
+            {category.name}
+          </option>
+        ))}
+      </select>
+    </label>
   )
 }
 
@@ -551,46 +653,55 @@ function Choice({
 }
 
 function Pieces({ onReady }: { onReady: () => void }) {
+  const categoryList = useCategoryList()
   const [rows, setRows] = useState<Draft[] | null>(null)
   const [saved, setSaved] = useState<Draft[]>([])
+  const [persistedIds, setPersistedIds] = useState<Set<string>>(new Set())
   const [error, setError] = useState('')
   const [query, setQuery] = useState('')
+  const [categoryFilter, setCategoryFilter] = useState('toutes')
   const [creating, setCreating] = useState(false)
   const [openId, setOpenId] = useState<string | null>(null)
   const [pendingDelete, setPendingDelete] = useState<string | null>(null)
   const [freshName, setFreshName] = useState('')
   const [freshDetail, setFreshDetail] = useState('')
   const [freshPrice, setFreshPrice] = useState('')
+  const [freshCategory, setFreshCategory] = useState('patisseries')
+  const [freshMoments, setFreshMoments] = useState<MomentId[]>([])
   const [freshImage, setFreshImage] = useState('')
-  const [hasImage, setHasImage] = useState(false)
+  const [hasImage, setHasImage] = useState(true)
+  const [hasCategory, setHasCategory] = useState(true)
+  const [hasMoments, setHasMoments] = useState(true)
+  const [columnsKnown, setColumnsKnown] = useState(false)
+  const [needsConstraint, setNeedsConstraint] = useState(false)
   const savedRef = useRef(saved)
+  const persistedRef = useRef(persistedIds)
   savedRef.current = saved
+  persistedRef.current = persistedIds
 
   const load = async () => {
     const result = await fetchPieces()
-    if (missingTable(result.error)) {
-      setError('missing')
-      setRows([])
-      return
+    const missing = missingTable(result.error)
+    const flags = {
+      hasCategory: result.hasCategory,
+      hasMoments: result.hasMoments,
+      failed: Boolean(result.error),
     }
-    if (result.error) {
-      setError('La lecture des pièces a échoué.')
-      setRows([])
-      return
+    const built = adminDrafts(result.rows, flags)
+    const drafts = built.map(({ persisted: _persisted, ...draft }) => draft)
+    if (!result.error) {
+      onReady()
+      setHasImage(result.hasImage)
+      setHasCategory(result.hasCategory)
+      setHasMoments(result.hasMoments)
+      setColumnsKnown(true)
+      setError('')
+    } else if (!missing) {
+      setError('La lecture des pièces a échoué. La vitrine locale reste affichée.')
+    } else {
+      setError('')
     }
-    onReady()
-    setHasImage(result.hasImage)
-    setError('')
-    const drafts = result.rows.map((row) => ({
-      id: row.id,
-      name: row.name,
-      detail: row.detail,
-      price: String(row.price),
-      signature: row.signature,
-      visible: row.visible,
-      sort: row.sort,
-      imageUrl: row.image_url ?? '',
-    }))
+    setPersistedIds(new Set(built.filter((row) => row.persisted).map((row) => row.id)))
     setRows(drafts)
     setSaved(drafts.map((row) => ({ ...row })))
   }
@@ -599,49 +710,83 @@ function Pieces({ onReady }: { onReady: () => void }) {
     void load()
   }, [])
 
-  const seed = async () => {
-    if (!supabase) return
-    const payload = pastries.map((item, sort) => ({
-      id: item.id,
-      name: item.name,
-      detail: item.detail,
-      price: item.price,
-      signature: Boolean(item.signature),
-      visible: true,
-      sort,
-    }))
-    const { error: writeError } = await supabase.from('pieces').upsert(payload)
-    if (writeError) {
-      setError(missingTable(writeError) ? 'missing' : 'Les pièces n’ont pas pu être installées.')
-      return
+  useEffect(() => {
+    setPieceCategoryUsage(rows?.map((row) => row.category) ?? null)
+  }, [rows])
+
+  useEffect(() => () => setPieceCategoryUsage(null), [])
+
+  useEffect(() => {
+    if (categoryFilter !== 'toutes' && !categoryList.some((item) => item.id === categoryFilter)) {
+      setCategoryFilter('toutes')
     }
-    setError('')
-    await load()
-  }
+  }, [categoryFilter, categoryList])
 
   const update = (id: string, patch: Partial<Draft>) => {
     setRows((current) => current?.map((row) => (row.id === id ? { ...row, ...patch } : row)) ?? null)
   }
 
-  const push = async (drafts: Draft[], mode: 'upsert' | 'insert' = 'upsert') => {
+  const rememberFields = (drafts: Draft[], categoryStored: boolean, momentsStored: boolean) => {
+    for (const row of drafts) {
+      if (categoryStored) clearPieceMeta(row.id, { category: true })
+      else writePieceMeta(row.id, { category: row.category })
+      if (momentsStored) clearPieceMeta(row.id, { moments: true })
+      else writePieceMeta(row.id, { moments: orderedMoments(row.moments) })
+    }
+  }
+
+  const push = async (drafts: Draft[]) => {
     const client = supabase
-    if (!client) return 'failed' as const
-    const send = (withImage: boolean) => {
-      const payload = drafts.map((row) => rowPayload(row, withImage))
-      return mode === 'insert' ? client.from('pieces').insert(payload) : client.from('pieces').upsert(payload)
+    if (!client) return { status: 'failed' as const, message: 'La connexion à la base est absente.' }
+    if (drafts.length === 0) return { status: 'saved' as const }
+    const session = await client.auth.getSession()
+    if (!session.data.session) {
+      return { status: 'failed' as const, message: 'La session a expiré. Reconnecte-toi, puis réessaie.' }
     }
-    const first = await send(true)
-    if (!first.error) {
-      setHasImage(true)
-      return 'saved' as const
+    let image = true
+    let category = true
+    let moment = true
+    let lastMessage = 'Les pièces n’ont pas pu être enregistrées dans la base.'
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+      const result = await client.from('pieces').upsert(drafts.map((row) => rowPayload(row, image, category, moment)))
+      if (!result.error) {
+        rememberFields(drafts, category, moment)
+        setHasImage(image)
+        setHasCategory(category)
+        setHasMoments(moment)
+        setColumnsKnown(true)
+        return { status: image ? ('saved' as const) : ('photo' as const) }
+      }
+      if (result.error.code === '42501') {
+        setNeedsConstraint(true)
+        setColumnsKnown(true)
+        return {
+          status: 'failed' as const,
+          message:
+            'La base refuse l’enregistrement. Lance le script ci-dessous dans Supabase, puis réessaie.',
+        }
+      }
+      if (category && (missingColumn(result.error, 'category') || constraintViolation(result.error))) {
+        if (constraintViolation(result.error)) setNeedsConstraint(true)
+        category = false
+        continue
+      }
+      if (moment && missingColumn(result.error, 'moments')) {
+        moment = false
+        setHasMoments(false)
+        setColumnsKnown(true)
+        continue
+      }
+      if (image && missingColumn(result.error, 'image_url')) {
+        image = false
+        setHasImage(false)
+        setColumnsKnown(true)
+        continue
+      }
+      lastMessage = result.error.message || lastMessage
+      return { status: 'failed' as const, message: lastMessage }
     }
-    if (missingImageColumn(first.error)) {
-      const second = await send(false)
-      if (second.error) return 'failed' as const
-      setHasImage(false)
-      return 'photo' as const
-    }
-    return 'failed' as const
+    return { status: 'failed' as const, message: lastMessage }
   }
 
   const move = (index: number, direction: -1 | 1) => {
@@ -665,6 +810,8 @@ function Pieces({ onReady }: { onReady: () => void }) {
     setFreshName('')
     setFreshDetail('')
     setFreshPrice('')
+    setFreshCategory('patisseries')
+    setFreshMoments([])
     setFreshImage('')
     setCreating(false)
   }
@@ -681,10 +828,12 @@ function Pieces({ onReady }: { onReady: () => void }) {
       name: freshName.trim(),
       detail: freshDetail.trim(),
       price: String(price),
+      category: freshCategory,
       signature: false,
       visible: true,
       sort: rows?.length ?? 0,
       imageUrl: freshImage,
+      moments: freshMoments,
     }
     setRows((current) => [...(current ?? []), created])
     clearFresh()
@@ -692,7 +841,8 @@ function Pieces({ onReady }: { onReady: () => void }) {
     setOpenId(id)
   }
 
-  const formStarted = creating && Boolean(freshName.trim() || freshDetail.trim() || freshPrice.trim() || freshImage)
+  const formStarted =
+    creating && Boolean(freshName.trim() || freshDetail.trim() || freshPrice.trim() || freshImage || freshMoments.length)
   const diff = useMemo(() => diffPieces(saved, rows), [saved, rows])
   const changeCount = diff.count + (formStarted ? 1 : 0)
 
@@ -705,10 +855,12 @@ function Pieces({ onReady }: { onReady: () => void }) {
       name: freshName.trim(),
       detail: freshDetail.trim(),
       price: String(price),
+      category: freshCategory,
       signature: false,
       visible: true,
       sort: rows?.length ?? 0,
       imageUrl: freshImage,
+      moments: freshMoments,
     }
   }
 
@@ -716,14 +868,16 @@ function Pieces({ onReady }: { onReady: () => void }) {
     if (!rows || !supabase) return null
     const extra = pendingForm()
     if (extra === 'invalid') return 'Le nom et le prix sont nécessaires.'
-    const batch = extra ? [...diff.touched, extra] : diff.touched
+    const touchedIds = new Set(diff.touched.map((row) => row.id))
+    const unpersisted = rows.filter((row) => !persistedRef.current.has(row.id) && !touchedIds.has(row.id))
+    const batch = extra ? [...diff.touched, ...unpersisted, extra] : [...diff.touched, ...unpersisted]
     for (const row of batch) {
       const price = Math.round(Number(row.price))
       if (!row.name.trim() || !Number.isFinite(price) || price < 0) return 'Le nom et le prix sont nécessaires.'
     }
     if (batch.length) {
       const result = await push(batch.map(cleanDraft))
-      if (result === 'failed') return 'L’enregistrement a échoué.'
+      if (result.status === 'failed') return result.message ?? 'L’enregistrement a échoué.'
     }
     if (diff.removed.length) {
       const { error: writeError } = await supabase.from('pieces').delete().in(
@@ -735,6 +889,7 @@ function Pieces({ onReady }: { onReady: () => void }) {
     const next = (extra ? [...rows, extra] : rows).map(cleanDraft)
     setRows(next)
     setSaved(next.map((row) => ({ ...row })))
+    setPersistedIds(new Set(next.map((row) => row.id)))
     clearFresh()
     setError('')
     return null
@@ -749,26 +904,80 @@ function Pieces({ onReady }: { onReady: () => void }) {
 
   useChangeReport('pieces', 'Pièces', changeCount > 0, changeCount, savePieces, discardPieces)
 
+  const keepInBase = async () => {
+    if (!rows) return
+    const pending = rows.filter((row) => !persistedIds.has(row.id))
+    const result = await push(pending.map(cleanDraft))
+    if (result.status === 'failed') {
+      setError(result.message ?? 'Les pièces n’ont pas pu être enregistrées dans la base.')
+      return
+    }
+    setPersistedIds(new Set(rows.map((row) => row.id)))
+    setSaved(rows.map((row) => ({ ...row })))
+    setError('')
+  }
+
   if (!rows) return <p className="note">Ouverture des pièces…</p>
-  if (error === 'missing') return <SchemaCard />
 
   const needle = fold(query.trim())
-  const shown = needle
-    ? rows.filter((row) => fold(`${row.name} ${row.detail}`).includes(needle))
-    : rows
+  const shown = rows.filter((row) => {
+    if (categoryFilter !== 'toutes' && row.category !== categoryFilter) return false
+    if (needle && !fold(`${row.name} ${row.detail}`).includes(needle)) return false
+    return true
+  })
+  const unpersistedCount = rows.filter((row) => !persistedIds.has(row.id)).length
+  const filterOptions = categoryList.slice()
+  for (const row of rows) {
+    if (!filterOptions.some((item) => item.id === row.category)) {
+      filterOptions.push({
+        id: row.category,
+        name: row.category,
+        blurb: '',
+        art: defaultCategoryArt,
+        photo: defaultCategoryPhoto,
+        sort: 999,
+      })
+    }
+  }
 
   return (
     <div className="stack">
-      {rows.length === 0 && !error && (
+      {rows.length === 0 && !error && <p className="note">La vitrine est vide.</p>}
+      {unpersistedCount > 0 && (
         <section className="schema-card">
-          <p>La vitrine est vide.</p>
-          <button className="solid" type="button" onClick={seed}>
-            Installer les pièces actuelles
+          <p>
+            {unpersistedCount === 1
+              ? 'Une pièce de la boutique n’est pas encore dans la base.'
+              : `${unpersistedCount} pièces de la boutique ne sont pas encore dans la base.`}{' '}
+            Enregistrez-les pour pouvoir les modifier ensuite.
+          </p>
+          <button className="solid" type="button" onClick={() => void keepInBase()}>
+            Enregistrer dans la base
           </button>
         </section>
       )}
-      {error && error !== 'missing' && <p className="form-error">{error}</p>}
-      {!hasImage && <PhotoColumn />}
+      {error && <p className="form-error">{error}</p>}
+      {columnsKnown && !hasImage && <PhotoColumn />}
+      {((columnsKnown && (!hasCategory || !hasMoments)) || needsConstraint) && <VitrineColumns />}
+      <div className="cat-filter" role="group" aria-label="Filtrer par catégorie">
+        <button
+          type="button"
+          className={categoryFilter === 'toutes' ? 'is-on' : ''}
+          onClick={() => setCategoryFilter('toutes')}
+        >
+          Toutes
+        </button>
+        {filterOptions.map((category) => (
+          <button
+            key={category.id}
+            type="button"
+            className={categoryFilter === category.id ? 'is-on' : ''}
+            onClick={() => setCategoryFilter(category.id)}
+          >
+            {category.name}
+          </button>
+        ))}
+      </div>
       <label className="piece-search">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <circle cx="10.5" cy="10.5" r="6.5" />
@@ -809,6 +1018,8 @@ function Pieces({ onReady }: { onReady: () => void }) {
               Prix en DH
               <input inputMode="numeric" value={freshPrice} onChange={(event) => setFreshPrice(event.target.value)} />
             </label>
+            <CategorySelect value={freshCategory} onChange={setFreshCategory} />
+            <MomentField value={freshMoments} onChange={setFreshMoments} />
             <label className="file-pick">
               <input
                 type="file"
@@ -842,7 +1053,9 @@ function Pieces({ onReady }: { onReady: () => void }) {
           </div>
         </article>
       )}
-      {needle && shown.length === 0 && <p className="note">Aucune pièce pour cette recherche.</p>}
+      {shown.length === 0 && (needle || categoryFilter !== 'toutes') && (
+        <p className="note">Aucune pièce pour ce filtre.</p>
+      )}
       {shown.map((row) => {
         const index = rows.findIndex((item) => item.id === row.id)
         const thumb = row.imageUrl || pastryImages[row.id] || pastryFallback
@@ -856,6 +1069,14 @@ function Pieces({ onReady }: { onReady: () => void }) {
                 <strong>{row.name || 'Sans nom'}</strong>
                 <small>
                   {row.price || '0'} DH
+                  {' · '}
+                  {filterOptions.find((item) => item.id === row.category)?.name ?? 'Pâtisseries'}
+                  {row.moments.length > 0
+                    ? ` · ${orderedMoments(row.moments)
+                        .map((id) => moments.find((item) => item.id === id)?.label)
+                        .filter(Boolean)
+                        .join(', ')}`
+                    : ''}
                   {row.signature ? ' · Populaire' : ''}
                   {row.visible ? '' : ' · Masquée'}
                   {!row.imageUrl && !pastryImages[row.id] ? ' · Sans photo' : ''}
@@ -898,6 +1119,8 @@ function Pieces({ onReady }: { onReady: () => void }) {
                 onChange={(event) => update(row.id, { price: event.target.value })}
               />
             </label>
+            <CategorySelect value={row.category} onChange={(category) => update(row.id, { category })} />
+            <MomentField value={row.moments} onChange={(next) => update(row.id, { moments: next })} />
             <label className="file-pick">
               <input
                 type="file"
@@ -954,6 +1177,302 @@ function Pieces({ onReady }: { onReady: () => void }) {
         </article>
           )}
         </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function CategoryPhoto({
+  photo,
+  onPick,
+  onError,
+}: {
+  photo: string
+  onPick: (photo: string) => void
+  onError: () => void
+}) {
+  return (
+    <div className="category-photo">
+      <img src={photo || defaultCategoryPhoto} alt="" />
+      <label className="file-pick">
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(event) => {
+            const file = event.target.files?.[0]
+            event.target.value = ''
+            if (!file) return
+            void fileToDataUrl(file).then(onPick).catch(onError)
+          }}
+        />
+        <span>{photo && photo !== defaultCategoryPhoto ? 'Changer la photo' : 'Déposer une photo'}</span>
+      </label>
+    </div>
+  )
+}
+
+function CategoriesPanel() {
+  const usage = usePieceCategoryUsage()
+  const [rows, setRows] = useState<Category[] | null>(null)
+  const [saved, setSaved] = useState<Category[]>([])
+  const [tableReady, setTableReady] = useState(true)
+  const [error, setError] = useState('')
+  const [creating, setCreating] = useState(false)
+  const [freshName, setFreshName] = useState('')
+  const [freshBlurb, setFreshBlurb] = useState('')
+  const [freshPhoto, setFreshPhoto] = useState(defaultCategoryPhoto)
+  const [pendingDelete, setPendingDelete] = useState<string | null>(null)
+  const savedRef = useRef(saved)
+  savedRef.current = saved
+
+  useEffect(() => {
+    let cancel = false
+    void fetchCategories().then((result) => {
+      if (cancel) return
+      setTableReady(result.table)
+      setRows(result.rows)
+      setSaved(result.rows.map((row) => ({ ...row })))
+      setCategoryList(result.rows)
+    })
+    return () => {
+      cancel = true
+    }
+  }, [])
+
+  useEffect(() => {
+    if (rows) setCategoryList(rows)
+  }, [rows])
+
+  const update = (id: string, patch: Partial<Category>) => {
+    setRows((current) => current?.map((row) => (row.id === id ? { ...row, ...patch } : row)) ?? null)
+  }
+
+  const inUse = async (id: string) => {
+    const live = pieceCategoryUsage()
+    if (live) return live.includes(id)
+    const result = await fetchPieces()
+    return adminDrafts(result.rows, {
+      hasCategory: result.hasCategory,
+      hasMoments: result.hasMoments,
+      failed: Boolean(result.error),
+    }).some((row) => row.category === id)
+  }
+
+  const remove = async (id: string) => {
+    if (await inUse(id)) {
+      setPendingDelete(null)
+      setError('Cette catégorie contient encore des pièces. Déplacez-les avant de la supprimer.')
+      return
+    }
+    setError('')
+    setPendingDelete(null)
+    setRows((current) => current?.filter((row) => row.id !== id) ?? null)
+  }
+
+  const move = (index: number, direction: -1 | 1) => {
+    if (!rows) return
+    const nextIndex = index + direction
+    if (nextIndex < 0 || nextIndex >= rows.length) return
+    const next = rows.slice()
+    const [item] = next.splice(index, 1)
+    next.splice(nextIndex, 0, item)
+    setRows(next.map((row, sort) => ({ ...row, sort })))
+  }
+
+  const clearFresh = () => {
+    setFreshName('')
+    setFreshBlurb('')
+    setFreshPhoto(defaultCategoryPhoto)
+    setCreating(false)
+  }
+
+  const create = () => {
+    if (!freshName.trim()) {
+      setError('Le nom de la catégorie est nécessaire.')
+      return
+    }
+    const created: Category = {
+      id: pieceId(freshName, (rows ?? []).map((row) => row.id)),
+      name: freshName.trim(),
+      blurb: freshBlurb.trim(),
+      art: defaultCategoryArt,
+      photo: freshPhoto || defaultCategoryPhoto,
+      sort: rows?.length ?? 0,
+    }
+    setRows((current) => [...(current ?? []), created])
+    clearFresh()
+    setError('')
+  }
+
+  const formStarted =
+    creating && Boolean(freshName.trim() || freshBlurb.trim() || freshPhoto !== defaultCategoryPhoto)
+  const diff = useMemo(() => {
+    if (!rows) return { count: 0 }
+    const savedById = new Map(saved.map((row) => [row.id, row]))
+    const currentIds = new Set(rows.map((row) => row.id))
+    const removed = saved.filter((row) => !currentIds.has(row.id))
+    let body = 0
+    let order = false
+    for (const row of rows) {
+      const prev = savedById.get(row.id)
+      if (!prev) {
+        body += 1
+        continue
+      }
+      if (prev.name !== row.name || prev.blurb !== row.blurb || prev.photo !== row.photo) body += 1
+      else if (prev.sort !== row.sort) order = true
+    }
+    return { count: body + removed.length + (order ? 1 : 0) }
+  }, [rows, saved])
+  const changeCount = diff.count + (formStarted ? 1 : 0)
+
+  const saveCategories = async () => {
+    if (!rows) return null
+    if (formStarted && !freshName.trim()) return 'Le nom de la catégorie est nécessaire.'
+    let next = rows
+    if (formStarted && freshName.trim()) {
+      next = [
+        ...rows,
+        {
+          id: pieceId(freshName, rows.map((row) => row.id)),
+          name: freshName.trim(),
+          blurb: freshBlurb.trim(),
+          art: defaultCategoryArt,
+          photo: freshPhoto || defaultCategoryPhoto,
+          sort: rows.length,
+        },
+      ]
+    }
+    const removed = savedRef.current.filter((row) => !next.some((item) => item.id === row.id)).map((row) => row.id)
+    for (const id of removed) {
+      if (await inUse(id)) {
+        return 'Une catégorie contient encore des pièces. Déplacez-les avant de la supprimer.'
+      }
+    }
+    const result = await persistCategories(next, removed)
+    if (!result.ok) return 'Les catégories n’ont pas pu être enregistrées.'
+    const clean = next.map((row, sort) => ({ ...row, sort }))
+    setRows(clean)
+    setSaved(clean.map((row) => ({ ...row })))
+    setTableReady(result.table)
+    clearFresh()
+    setError('')
+    return null
+  }
+
+  const discardCategories = () => {
+    const baseline = savedRef.current.map((row) => ({ ...row }))
+    setRows(baseline)
+    setCategoryList(baseline)
+    clearFresh()
+    setError('')
+    setPendingDelete(null)
+  }
+
+  useChangeReport('categories', 'Catégories', changeCount > 0, changeCount, saveCategories, discardCategories)
+
+  if (!rows) return <p className="note">Ouverture des catégories…</p>
+
+  return (
+    <div className="stack">
+      <p className="note">
+        Ces catégories deviennent les tuiles de la boutique. Une catégorie qui contient encore des pièces ne peut
+        pas être supprimée : déplacez d’abord ses pièces.
+      </p>
+      {!tableReady && (
+        <p className="note">Elles sont gardées sur cet appareil en attendant la base Supabase.</p>
+      )}
+      {error && <p className="form-error">{error}</p>}
+      {!tableReady && <VitrineColumns />}
+      {!creating ? (
+        <button className="new-piece" type="button" onClick={() => setCreating(true)}>
+          <span className="new-piece-plus" aria-hidden="true">
+            +
+          </span>
+          <span>
+            <strong>Nouvelle catégorie</strong>
+            <small>Elle apparaît dans la boutique</small>
+          </span>
+        </button>
+      ) : (
+        <article className="piece-edit is-new is-plain">
+          <p className="new-kicker">Nouvelle catégorie</p>
+          <div className="fields">
+            <label>
+              Nom
+              <input value={freshName} onChange={(event) => setFreshName(event.target.value)} />
+            </label>
+            <label>
+              Description
+              <textarea value={freshBlurb} onChange={(event) => setFreshBlurb(event.target.value)} />
+            </label>
+            <CategoryPhoto
+              photo={freshPhoto}
+              onPick={setFreshPhoto}
+              onError={() => setError('Cette image n’a pas pu être lue.')}
+            />
+            <div className="row-actions">
+              <button className="solid" type="button" onClick={create}>
+                Ajouter
+              </button>
+              <button className="ghost-ink" type="button" onClick={clearFresh}>
+                Annuler
+              </button>
+            </div>
+          </div>
+        </article>
+      )}
+      {rows.map((row, index) => {
+        const count = usage?.filter((id) => id === row.id).length
+        return (
+          <article className="piece-edit is-plain" key={row.id}>
+            <div className="fields">
+              <label>
+                Nom
+                <input value={row.name} onChange={(event) => update(row.id, { name: event.target.value })} />
+              </label>
+              <label>
+                Description
+                <textarea value={row.blurb} onChange={(event) => update(row.id, { blurb: event.target.value })} />
+              </label>
+              <CategoryPhoto
+                photo={row.photo}
+                onPick={(photo) => update(row.id, { photo })}
+                onError={() => setError('Cette image n’a pas pu être lue.')}
+              />
+              <p className="note">
+                {count === undefined ? 'Pièces…' : count === 1 ? '1 pièce' : `${count} pièces`}
+              </p>
+              <div className="row-actions">
+                <button className="ghost-ink" type="button" onClick={() => move(index, -1)} disabled={index === 0}>
+                  Monter
+                </button>
+                <button
+                  className="ghost-ink"
+                  type="button"
+                  onClick={() => move(index, 1)}
+                  disabled={index === rows.length - 1}
+                >
+                  Descendre
+                </button>
+                {pendingDelete === row.id ? (
+                  <>
+                    <button className="piece-remove is-sure" type="button" onClick={() => void remove(row.id)}>
+                      Supprimer
+                    </button>
+                    <button className="piece-remove" type="button" onClick={() => setPendingDelete(null)}>
+                      Annuler
+                    </button>
+                  </>
+                ) : (
+                  <button className="piece-remove" type="button" onClick={() => setPendingDelete(row.id)}>
+                    Supprimer
+                  </button>
+                )}
+              </div>
+            </div>
+          </article>
         )
       })}
     </div>
@@ -1127,8 +1646,8 @@ function Themes() {
   return (
     <div className="stack">
       <p className="note">
-        Chaque saison pose une illustration en fond du produit populaire : cœurs, lune, soleil, feuilles ou
-        neige. Elle reste derrière le nom et le prix. Les pièces ne changent pas.
+        Chaque saison teinte toute la vitrine : fonds, or, accents et illustration de l’ouverture — cœurs,
+        lune, soleil, feuilles ou neige. Les pièces, elles, ne changent pas.
       </p>
       {error && <p className="form-error">{error}</p>}
       <div className="themes">

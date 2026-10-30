@@ -5,7 +5,7 @@ export function BoutiqueInvite() {
 
   return (
     <a href="/" className="boutique-invite">
-      <span className="invite-mark" aria-hidden="true">Bennis</span>
+      <img className="invite-mark" src="/maison/wordmark-night.png" alt="" />
       <span>
         <strong>{t.boutiqueTitle}</strong>
         <em>{t.boutiqueNote}</em>

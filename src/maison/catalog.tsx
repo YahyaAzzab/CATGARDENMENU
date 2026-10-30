@@ -1,72 +1,53 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { supabase } from '../lib/supabase'
+import { fetchCategories, setCategoryList } from './categoriesDb'
+import { categories as defaultCategories, type Category } from './categories'
 import { isTheme, type ThemeId } from './house'
-import { pastries, pastryFallback, pastryImages, type Pastry } from './pastries'
+import { pastriesForShop, remoteIsVitrine } from './vitrine'
 import { fetchPieces } from './piecesDb'
-
-type PieceRow = {
-  id: string
-  name: string
-  detail: string
-  price: number
-  signature: boolean
-  visible: boolean
-  sort: number
-  image_url?: string | null
-}
-
-function toPastry(row: PieceRow): Pastry | null {
-  if (!row.name?.trim()) return null
-  const image = row.image_url?.trim() || pastryImages[row.id] || pastryFallback
-  const name = row.name.trim() === 'Tarte cookies' ? 'Cookies' : row.name
-  return {
-    id: row.id,
-    name,
-    detail: row.detail,
-    price: row.price,
-    image,
-    signature: row.signature,
-    visible: row.visible,
-    sort: row.sort,
-  }
-}
+import type { Pastry } from './pastries'
 
 type CatalogValue = {
   pieces: Pastry[]
+  categories: Category[]
   theme: ThemeId
   remote: boolean
 }
 
 const CatalogContext = createContext<CatalogValue>({
-  pieces: pastries,
+  pieces: pastriesForShop([], { hasCategory: false, hasMoments: false, failed: true }),
+  categories: defaultCategories,
   theme: 'maison',
   remote: false,
 })
 
 export function CatalogProvider({ children }: { children: ReactNode }) {
-  const [pieces, setPieces] = useState(pastries)
+  const [pieces, setPieces] = useState(() => pastriesForShop([], { hasCategory: false, hasMoments: false, failed: true }))
+  const [categories, setCategories] = useState<Category[]>(defaultCategories)
   const [theme, setTheme] = useState<ThemeId>('maison')
   const [remote, setRemote] = useState(false)
 
   useEffect(() => {
-    const client = supabase
-    if (!client) return
     let cancel = false
     const load = async () => {
-      const [pieceRes, houseRes] = await Promise.all([
+      const client = supabase
+      const [pieceRes, categoryRes, houseRes] = await Promise.all([
         fetchPieces(),
-        client.from('house').select('theme').eq('id', 'maison').maybeSingle(),
+        fetchCategories(),
+        client
+          ? client.from('house').select('theme').eq('id', 'maison').maybeSingle()
+          : Promise.resolve({ data: null, error: null }),
       ])
       if (cancel) return
-      if (!pieceRes.error && pieceRes.rows.length > 0) {
-        const next = pieceRes.rows
-          .map(toPastry)
-          .filter((item): item is Pastry => item !== null && item.visible !== false)
-        if (next.length) {
-          setPieces(next)
-          setRemote(true)
-        }
+      setCategoryList(categoryRes.rows)
+      setCategories(categoryRes.rows)
+      const flags = {
+        hasCategory: pieceRes.hasCategory,
+        hasMoments: pieceRes.hasMoments,
+        failed: Boolean(pieceRes.error),
       }
+      setPieces(pastriesForShop(pieceRes.rows, flags))
+      setRemote(!pieceRes.error && remoteIsVitrine(pieceRes.rows, pieceRes.hasCategory))
       const themeValue = houseRes.data?.theme
       if (!houseRes.error && typeof themeValue === 'string' && isTheme(themeValue)) {
         setTheme(themeValue)
@@ -78,7 +59,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const value = useMemo(() => ({ pieces, theme, remote }), [pieces, theme, remote])
+  const value = useMemo(() => ({ pieces, categories, theme, remote }), [pieces, categories, theme, remote])
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>
 }
 

@@ -227,6 +227,16 @@
   padding: 32px 28px;
 }
 
+.gate-back {
+  display: inline-flex;
+  margin: 0 0 12px;
+  color: var(--gold-deep);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  text-decoration: none;
+}
+
 .gate-logo {
   display: block;
   width: min(100%, 240px);
@@ -264,8 +274,9 @@
 }
 
 .gate input,
-.fields input,
+.fields input:not([type='checkbox']),
 .fields textarea,
+.fields select,
 .order-card select {
   width: 100%;
   border: 1px solid var(--line);
@@ -432,6 +443,10 @@
   min-width: 0;
 }
 
+.piece-edit.is-plain {
+  grid-template-columns: 1fr;
+}
+
 .piece-edit img,
 .image-wait {
   width: 72px;
@@ -439,6 +454,18 @@
   object-fit: cover;
   border-radius: 14px;
   background: #f4eadc;
+}
+
+.piece-edit .category-photo {
+  display: grid;
+  gap: 10px;
+}
+
+.piece-edit .category-photo img {
+  width: 100%;
+  height: 148px;
+  object-fit: cover;
+  border-radius: 16px;
 }
 
 .new-kicker {
@@ -462,6 +489,74 @@
 
 .fields {
   min-width: 0;
+}
+
+.cat-filter {
+  display: flex;
+  gap: 8px;
+  overflow: auto;
+  padding-bottom: 2px;
+}
+
+.cat-filter button {
+  border: 1px solid rgba(228, 201, 138, 0.35);
+  background: transparent;
+  color: #f6efe4;
+  border-radius: 999px;
+  min-height: 36px;
+  padding: 0 14px;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.cat-filter button.is-on {
+  background: var(--cream);
+  color: var(--ink);
+  border-color: var(--cream);
+}
+
+.moment-field {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.moment-field legend {
+  padding: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.moment-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.fields label.moment-option {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  width: auto;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  letter-spacing: 0;
+  text-transform: none;
+  font-size: 0.92rem;
+}
+
+.fields label.moment-option input {
+  width: auto;
+  margin: 0;
+  accent-color: #8a6a3e;
 }
 
 .piece-search {

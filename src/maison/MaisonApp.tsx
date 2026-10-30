@@ -1,9 +1,11 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { AnimatePresence, MotionConfig, motion, useReducedMotion } from 'framer-motion'
 import { config } from '../config'
 import { PawPrint } from '../components/Icons'
 import { CartProvider, orderHref, useCart } from './cart'
 import { CatalogProvider, useCatalog } from './catalog'
+import { defaultCategoryArt, type Category } from './categories'
+import { getMoment, popularFor } from './moment'
 import { rememberOrder } from './orders'
 import { settle } from './motion'
 import { formatDh, type Pastry } from './pastries'
@@ -12,12 +14,29 @@ import './maison.css'
 const FONT_HREF =
   'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Monsieur+La+Doulaise&family=Outfit:wght@300;400;500&display=swap'
 
+type CollectionGroup = { category: Category; items: Pastry[] }
+
 function Drip({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 40 56" aria-hidden="true">
       <path
         fill="currentColor"
         d="M20 1.5C28 14 34 26 34 36.5 34 46.5 27.8 54 20 54S6 46.5 6 36.5C6 26 12 14 20 1.5z"
+      />
+    </svg>
+  )
+}
+
+function Arrow({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M5 12h14M13 6l6 6-6 6"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   )
@@ -132,17 +151,49 @@ export default function MaisonApp() {
 function House() {
   const reduce = useReducedMotion()
   const wide = useWide()
-  const { pieces, theme } = useCatalog()
-  const featured = pieces.find((item) => item.signature) ?? pieces[0]
+  const { pieces, categories, theme } = useCatalog()
   const { count, cartRef } = useCart()
   const [intro, setIntro] = useState(true)
   const [live, setLive] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [pieceId, setPieceId] = useState<string | null>(null)
   const [cartOpen, setCartOpen] = useState(false)
+  const [openCat, setOpenCat] = useState<string | null>(null)
+  const [now, setNow] = useState(() => new Date())
+  const categoryIds = useRef<string[]>([])
   const opener = useRef<HTMLElement | null>(null)
   const pieceWasOpen = useRef(false)
   const piece = pieces.find((item) => item.id === pieceId) ?? null
+
+  const moment = getMoment(now)
+
+  const collections = useMemo<CollectionGroup[]>(() => {
+    const known = new Set(categories.map((item) => item.id))
+    const extras: Category[] = []
+    for (const piece of pieces) {
+      if (known.has(piece.category) || extras.some((item) => item.id === piece.category)) continue
+      extras.push({
+        id: piece.category,
+        name: piece.category,
+        blurb: '',
+        art: defaultCategoryArt,
+        photo: piece.image,
+        sort: 1000 + extras.length,
+      })
+    }
+    return [...categories, ...extras]
+      .sort((a, b) => a.sort - b.sort)
+      .map((category) => ({
+        category,
+        items: pieces
+          .filter((item) => item.category === category.id)
+          .sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0)),
+      }))
+  }, [pieces, categories])
+  categoryIds.current = collections.map((group) => group.category.id)
+
+  const popular = useMemo(() => popularFor(pieces, moment, 10), [pieces, moment])
+  const current = openCat ? collections.find((group) => group.category.id === openCat) ?? null : null
 
   useEffect(() => {
     document.title = 'Maître Chocolatier Bennis · Fès'
@@ -169,6 +220,11 @@ function House() {
   }, [intro, piece, cartOpen])
 
   useEffect(() => {
+    const id = window.setInterval(() => setNow(new Date()), 60_000)
+    return () => window.clearInterval(id)
+  }, [])
+
+  useEffect(() => {
     const onPop = () => {
       const state = history.state as { mcb?: string; id?: string } | null
       if (state?.mcb === 'piece' && state.id) {
@@ -181,6 +237,13 @@ function House() {
         setPieceId(null)
         return
       }
+      if (state?.mcb === 'cat' && state.id) {
+        setOpenCat(state.id && categoryIds.current.includes(state.id) ? state.id : null)
+        setPieceId(null)
+        setCartOpen(false)
+        return
+      }
+      setOpenCat(null)
       setPieceId(null)
       setCartOpen(false)
     }
@@ -194,6 +257,7 @@ function House() {
       history.back()
       return
     }
+    setOpenCat(null)
     setPieceId(null)
     setCartOpen(false)
   }
@@ -228,6 +292,20 @@ function House() {
     setPieceId(null)
     setCartOpen(true)
     history.pushState({ mcb: 'cart' }, '')
+  }
+
+  const openCollection = (id: string) => {
+    setOpenCat(id)
+    setPieceId(null)
+    setCartOpen(false)
+    history.pushState({ mcb: 'cat', id }, '')
+    window.scrollTo({ top: 0, behavior: 'auto' })
+  }
+
+  const switchCollection = (id: string) => {
+    setOpenCat(id)
+    history.replaceState({ mcb: 'cat', id }, '')
+    window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' })
   }
 
   const goTop = () => {
@@ -266,33 +344,49 @@ function House() {
       </header>
 
       <main>
-        {featured && (
-          <section className="hero">
-            <button
-              type="button"
-              className="hero-stage"
-              aria-label={`${featured.name}, ${formatDh(featured.price)}`}
-              onClick={(event) => openPiece(featured.id, event.currentTarget)}
+        <AnimatePresence mode="wait" initial={false}>
+          {current ? (
+            <motion.div
+              key={current.category.id}
+              initial={reduce ? undefined : { opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reduce ? undefined : { opacity: 0, y: -12 }}
+              transition={{ duration: reduce ? 0 : 0.45, ease: settle }}
             >
-              <span className="hero-plate">
-                <img src={featured.image} alt="" />
-              </span>
-            </button>
-            <div className="hero-copy">
-              <p className="eyebrow">Maître Chocolatier Fès</p>
-              <p className="choice">Le choix du chef</p>
-              <h1>{featured.name}</h1>
-              <p className="hero-price">{formatDh(featured.price)}</p>
-            </div>
-          </section>
-        )}
-
-        <Vitrine
-          pieces={pieces.filter((item) => item.id !== featured?.id)}
-          live={live}
-          reduce={!!reduce}
-          onOpen={openPiece}
-        />
+              <CollectionView
+                category={current.category}
+                items={current.items}
+                groups={collections}
+                live={live}
+                reduce={!!reduce}
+                onBack={closeTop}
+                onSwitch={switchCollection}
+                onOpen={openPiece}
+              />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="home"
+              initial={reduce ? undefined : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={reduce ? undefined : { opacity: 0 }}
+              transition={{ duration: reduce ? 0 : 0.4, ease: settle }}
+            >
+              <Collections
+                groups={collections}
+                live={live}
+                reduce={!!reduce}
+                onOpen={openCollection}
+              />
+              <PopularRail
+                items={popular}
+                live={live}
+                reduce={!!reduce}
+                onOpen={openPiece}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
 
       <footer className="maison-footer">
@@ -366,41 +460,296 @@ function House() {
   )
 }
 
-function Vitrine({
-  pieces,
+function Collections({
+  groups,
   live,
   reduce,
   onOpen,
 }: {
-  pieces: Pastry[]
+  groups: CollectionGroup[]
   live: boolean
   reduce: boolean
-  onOpen: (id: string, source: HTMLElement) => void
+  onOpen: (id: string) => void
 }) {
   return (
-    <section className="vitrine" id="pieces">
-      <div className="grid">
-        {pieces.map((pastry, index) => (
+    <section className="collections" aria-labelledby="collections-title">
+      <header className="block-head vitrine-head">
+        <h2 id="collections-title">Collections</h2>
+      </header>
+      <div className="tile-grid">
+        {groups.map(({ category, items }, index) => (
           <motion.button
-            key={pastry.id}
+            key={category.id}
             type="button"
-            className="piece"
+            className="tile"
             initial={reduce ? false : { opacity: 0, y: 22 }}
             animate={live ? { opacity: 1, y: 0 } : { opacity: 0, y: 22 }}
-            transition={{ duration: reduce ? 0 : 0.7, ease: settle, delay: reduce ? 0 : index * 0.05 }}
-            onClick={(event) => onOpen(pastry.id, event.currentTarget)}
+            transition={{ duration: reduce ? 0 : 0.7, ease: settle, delay: reduce ? 0 : index * 0.06 }}
+            onClick={() => onOpen(category.id)}
+            aria-label={`${category.name} — ${items.length === 1 ? '1 pièce' : `${items.length} pièces`}`}
           >
-            <span className="media">
-              <img src={pastry.image} alt="" />
+            <span className="tile-frame">
+              <img src={category.photo || items[0]?.image} alt="" loading="lazy" />
             </span>
-            <span className="copy">
-              <h3>{pastry.name}</h3>
-              <p className="price">{formatDh(pastry.price)}</p>
+            <span className="tile-copy">
+              <strong>{category.name}</strong>
+              <small>{items.length === 1 ? '1 pièce' : `${items.length} pièces`}</small>
             </span>
+            <Arrow className="tile-arrow" />
           </motion.button>
         ))}
       </div>
     </section>
+  )
+}
+
+function PopularRail({
+  items,
+  live,
+  reduce,
+  onOpen,
+}: {
+  items: Pastry[]
+  live: boolean
+  reduce: boolean
+  onOpen: (id: string, source: HTMLElement) => void
+}) {
+  if (items.length === 0) return null
+
+  return (
+    <section className="rail" aria-labelledby="rail-title">
+      <header className="block-head">
+        <h2 id="rail-title">Produits populaires</h2>
+      </header>
+      <div className="rail-window">
+        <div className="rail-track">
+          <RailSet items={items} live={live} reduce={reduce} onOpen={onOpen} />
+          {/* Copie du rail : le CSS ne l’affiche que lorsque le défilement continu tourne. */}
+          <RailSet items={items} live={live} reduce={reduce} onOpen={onOpen} decorative />
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function RailSet({
+  items,
+  live,
+  reduce,
+  onOpen,
+  decorative = false,
+}: {
+  items: Pastry[]
+  live: boolean
+  reduce: boolean
+  onOpen: (id: string, source: HTMLElement) => void
+  decorative?: boolean
+}) {
+  return (
+    <ul className="rail-set" aria-hidden={decorative ? true : undefined}>
+      {items.map((pastry, index) => (
+        <li key={pastry.id}>
+          <RailCard
+            pastry={pastry}
+            live={live}
+            reduce={reduce}
+            delay={index * 0.05}
+            decorative={decorative}
+            onOpen={onOpen}
+          />
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+function RailCard({
+  pastry,
+  live,
+  reduce,
+  delay,
+  decorative,
+  onOpen,
+}: {
+  pastry: Pastry
+  live: boolean
+  reduce: boolean
+  delay: number
+  decorative: boolean
+  onOpen: (id: string, source: HTMLElement) => void
+}) {
+  const motionProps = {
+    initial: reduce ? (false as const) : { opacity: 0, y: 18 },
+    animate: live ? { opacity: 1, y: 0 } : { opacity: 0, y: 18 },
+    transition: { duration: reduce ? 0 : 0.65, ease: settle, delay: reduce ? 0 : delay },
+  }
+
+  return (
+    <motion.article className={decorative ? 'rail-card is-decorative' : 'rail-card'} {...motionProps}>
+      <button
+        type="button"
+        className="rail-hit"
+        disabled={decorative}
+        tabIndex={decorative ? -1 : undefined}
+        aria-label={`${pastry.name}, ${formatDh(pastry.price)}`}
+        onClick={(event) => onOpen(pastry.id, event.currentTarget)}
+      >
+        <span className="rail-thumb">
+          <img src={pastry.image} alt="" loading="lazy" />
+        </span>
+        <span className="rail-copy">
+          <strong>{pastry.name}</strong>
+          <small>{pastry.detail}</small>
+        </span>
+      </button>
+      <span className="rail-foot">
+        <span className="price">{formatDh(pastry.price)}</span>
+        <RailAdd pastry={pastry} inert={decorative} />
+      </span>
+    </motion.article>
+  )
+}
+
+function RailAdd({ pastry, inert }: { pastry: Pastry; inert: boolean }) {
+  const { add } = useCart()
+  if (inert) {
+    return <span className="round-add is-inert">+</span>
+  }
+  return (
+    <button
+      type="button"
+      className="round-add"
+      aria-label={`Ajouter ${pastry.name} au panier`}
+      onClick={(event) => {
+        event.stopPropagation()
+        add(pastry, 1, event.currentTarget.getBoundingClientRect())
+      }}
+    >
+      +
+    </button>
+  )
+}
+
+function CollectionView({
+  category,
+  items,
+  groups,
+  live,
+  reduce,
+  onBack,
+  onSwitch,
+  onOpen,
+}: {
+  category: Category
+  items: Pastry[]
+  groups: CollectionGroup[]
+  live: boolean
+  reduce: boolean
+  onBack: () => void
+  onSwitch: (id: string) => void
+  onOpen: (id: string, source: HTMLElement) => void
+}) {
+  return (
+    <section className="collection">
+      <header className="collection-head">
+        <div className="collection-photo">
+          <img src={category.photo} alt="" />
+        </div>
+        <div className="collection-copy">
+          <button type="button" className="back-link" onClick={onBack}>
+            <Arrow className="back-arrow" />
+            Toutes les collections
+          </button>
+          <p className="eyebrow">Collection</p>
+          <h2>{category.name}</h2>
+          <p className="collection-blurb">{category.blurb}</p>
+          <p className="collection-count">
+            {items.length === 1 ? '1 pièce' : `${items.length} pièces`} · commande sur WhatsApp
+          </p>
+        </div>
+      </header>
+
+      <nav className="cat-switch" aria-label="Collections">
+        {groups.map((group) => (
+          <button
+            key={group.category.id}
+            type="button"
+            className={group.category.id === category.id ? 'collection-pill is-active' : 'collection-pill'}
+            aria-current={group.category.id === category.id ? 'true' : undefined}
+            onClick={() => onSwitch(group.category.id)}
+          >
+            <img src={group.category.art} alt="" />
+            <span>{group.category.name}</span>
+          </button>
+        ))}
+      </nav>
+
+      <div className="piece-grid">
+        {items.length === 0 && <p className="empty">Aucune pièce dans cette collection.</p>}
+        {items.map((pastry, index) => (
+          <PieceCard
+            key={pastry.id}
+            pastry={pastry}
+            live={live}
+            reduce={reduce}
+            delay={index * 0.04}
+            onOpen={onOpen}
+          />
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function PieceCard({
+  pastry,
+  live,
+  reduce,
+  delay,
+  onOpen,
+}: {
+  pastry: Pastry
+  live: boolean
+  reduce: boolean
+  delay: number
+  onOpen: (id: string, source: HTMLElement) => void
+}) {
+  const { add } = useCart()
+
+  return (
+    <motion.article
+      className="piece-card"
+      initial={reduce ? false : { opacity: 0, y: 20 }}
+      animate={live ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+      transition={{ duration: reduce ? 0 : 0.6, ease: settle, delay: reduce ? 0 : delay }}
+    >
+      <button
+        type="button"
+        className="piece-hit"
+        aria-label={`${pastry.name}, ${formatDh(pastry.price)}`}
+        onClick={(event) => onOpen(pastry.id, event.currentTarget)}
+      >
+        <span className="piece-frame">
+          <img src={pastry.image} alt="" loading="lazy" />
+          {pastry.signature && <span className="piece-tag">Signature</span>}
+        </span>
+        <span className="piece-copy">
+          <strong>{pastry.name}</strong>
+          <small>{pastry.detail}</small>
+        </span>
+      </button>
+      <div className="piece-buy">
+        <span className="price">{formatDh(pastry.price)}</span>
+        <button
+          type="button"
+          className="round-add"
+          aria-label={`Ajouter ${pastry.name} au panier`}
+          onClick={(event) => add(pastry, 1, event.currentTarget.getBoundingClientRect())}
+        >
+          +
+        </button>
+      </div>
+    </motion.article>
   )
 }
 
@@ -414,8 +763,10 @@ function Sheet({
   onClose: () => void
 }) {
   const reduce = useReducedMotion()
+  const { categories } = useCatalog()
   const { add } = useCart()
   const [qty, setQty] = useState(1)
+  const categoryName = categories.find((item) => item.id === pastry.category)?.name ?? 'La maison'
   const closeRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
@@ -456,7 +807,7 @@ function Sheet({
               Fermer
             </button>
           </div>
-          <p className="eyebrow">{pastry.signature ? 'Signature' : 'La maison'}</p>
+          <p className="eyebrow">{pastry.signature ? 'Signature' : categoryName}</p>
           <h2 id="piece-title">{pastry.name}</h2>
           <p className="detail">{pastry.detail}</p>
           <p className="price">{formatDh(pastry.price)}</p>
