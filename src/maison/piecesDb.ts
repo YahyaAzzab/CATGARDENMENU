@@ -98,7 +98,7 @@ export async function fetchPieces(): Promise<{
     const result = await supabase.from('pieces').select(attempt.sql).order('sort')
     if (!result.error) {
       return {
-        rows: (result.data ?? []) as PieceRecord[],
+        rows: (result.data ?? []) as unknown as PieceRecord[],
         error: null,
         hasImage: attempt.hasImage,
         hasCategory: attempt.hasCategory,

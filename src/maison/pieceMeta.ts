@@ -33,12 +33,12 @@ function writeAll(store: Store) {
 export function readPieceMeta(id: string): PieceMeta | undefined {
   const row = readAll()[id]
   if (!row) return undefined
-  const hasMoments = Array.isArray(row.moments)
-  const moments = hasMoments
-    ? row.moments.filter((item): item is MomentId => typeof item === 'string' && isMoment(item))
+  const rawMoments = row.moments
+  const moments = Array.isArray(rawMoments)
+    ? rawMoments.filter((item): item is MomentId => typeof item === 'string' && isMoment(item))
     : undefined
   const category = typeof row.category === 'string' && row.category.trim() ? row.category.trim() : undefined
-  if (!category && !hasMoments) return undefined
+  if (!category && !moments) return undefined
   return { category, moments }
 }
 
