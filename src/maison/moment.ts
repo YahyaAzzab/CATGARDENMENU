@@ -39,7 +39,6 @@ export function orderedMoments(ids: MomentId[]): MomentId[] {
 }
 
 type Rankable = {
-  signature?: boolean
   moments?: MomentId[]
   pull?: number
 }
@@ -51,6 +50,6 @@ type Rankable = {
 export function popularFor<T extends Rankable>(items: T[], moment: MomentId, size = 10): T[] {
   const assigned = items.filter((item) => item.moments?.includes(moment))
   const pool = assigned.length > 0 ? assigned : items
-  const score = (item: T) => item.pull ?? (item.signature ? 85 : 60)
+  const score = (item: T) => item.pull ?? 60
   return [...pool].sort((a, b) => score(b) - score(a)).slice(0, Math.min(size, pool.length))
 }

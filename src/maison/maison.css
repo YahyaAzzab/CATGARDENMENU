@@ -680,9 +680,9 @@
   transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* ─── Rail : défilement continu sur grand écran ───────────── */
+/* ─── Rail : défilement continu, y compris sur téléphone ── */
 
-@media (min-width: 840px) and (prefers-reduced-motion: no-preference) {
+@media (prefers-reduced-motion: no-preference) {
   .rail-window {
     overflow: hidden;
   }
@@ -692,12 +692,22 @@
   }
 
   .rail-track {
-    animation: rail-drift 54s linear infinite;
+    animation: rail-drift 40s linear infinite;
+    -webkit-animation: rail-drift 40s linear infinite;
+    will-change: transform;
   }
 
+  .rail-window.is-held .rail-track {
+    animation-play-state: paused;
+    -webkit-animation-play-state: paused;
+  }
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
   .rail-window:hover .rail-track,
   .rail-window:focus-within .rail-track {
     animation-play-state: paused;
+    -webkit-animation-play-state: paused;
   }
 }
 
@@ -1328,10 +1338,10 @@
 
 @keyframes rail-drift {
   from {
-    transform: translateX(0);
+    transform: translate3d(0, 0, 0);
   }
   to {
-    transform: translateX(-50%);
+    transform: translate3d(-50%, 0, 0);
   }
 }
 

@@ -9,6 +9,7 @@ import { getMoment, popularFor } from './moment'
 import { rememberOrder } from './orders'
 import { settle } from './motion'
 import { formatDh, type Pastry } from './pastries'
+import { playUiSoundThenGo, preloadUiSounds } from '../lib/uiSound'
 import './maison.css'
 
 const FONT_HREF =
@@ -197,6 +198,7 @@ function House() {
 
   useEffect(() => {
     document.title = 'Maître Chocolatier Bennis · Fès'
+    void preloadUiSounds()
     const theme = document.querySelector('meta[name="theme-color"]')
     const previous = theme?.getAttribute('content')
     theme?.setAttribute('content', '#F6EFE4')
@@ -422,7 +424,7 @@ function House() {
             WhatsApp
           </a>
         </div>
-        <a className="cat-gate" href="/catgardenmenu">
+        <a className="cat-gate" href="/catgardenmenu" onClick={(event) => playUiSoundThenGo(event, 'meow')}>
           <span className="cat-paws" aria-hidden="true">
             <PawPrint size={18} />
             <PawPrint size={14} />
@@ -514,6 +516,7 @@ function PopularRail({
   reduce: boolean
   onOpen: (id: string, source: HTMLElement) => void
 }) {
+  const [held, setHeld] = useState(false)
   if (items.length === 0) return null
 
   return (
@@ -521,7 +524,13 @@ function PopularRail({
       <header className="block-head">
         <h2 id="rail-title">Produits populaires</h2>
       </header>
-      <div className="rail-window">
+      <div
+        className={held ? 'rail-window is-held' : 'rail-window'}
+        onPointerDown={() => setHeld(true)}
+        onPointerUp={() => setHeld(false)}
+        onPointerCancel={() => setHeld(false)}
+        onPointerLeave={() => setHeld(false)}
+      >
         <div className="rail-track">
           <RailSet items={items} live={live} reduce={reduce} onOpen={onOpen} />
           {/* Copie du rail : le CSS ne l’affiche que lorsque le défilement continu tourne. */}
@@ -731,7 +740,6 @@ function PieceCard({
       >
         <span className="piece-frame">
           <img src={pastry.image} alt="" loading="lazy" />
-          {pastry.signature && <span className="piece-tag">Signature</span>}
         </span>
         <span className="piece-copy">
           <strong>{pastry.name}</strong>
@@ -807,7 +815,7 @@ function Sheet({
               Fermer
             </button>
           </div>
-          <p className="eyebrow">{pastry.signature ? 'Signature' : categoryName}</p>
+          <p className="eyebrow">{categoryName}</p>
           <h2 id="piece-title">{pastry.name}</h2>
           <p className="detail">{pastry.detail}</p>
           <p className="price">{formatDh(pastry.price)}</p>

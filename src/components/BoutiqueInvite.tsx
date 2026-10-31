@@ -1,10 +1,11 @@
 import { useI18n } from '../i18n/I18nContext';
+import { playUiSoundThenGo } from '../lib/uiSound';
 
 export function BoutiqueInvite() {
   const { t } = useI18n();
 
   return (
-    <a href="/" className="boutique-invite">
+    <a href="/" className="boutique-invite" onClick={(event) => playUiSoundThenGo(event, 'boutique')}>
       <img className="invite-mark" src="/maison/wordmark-night.png" alt="" />
       <span>
         <strong>{t.boutiqueTitle}</strong>

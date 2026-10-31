@@ -12,6 +12,7 @@ import { BackToTop } from './components/BackToTop';
 import { PawPrint } from './components/Icons';
 import { useMenuRoute, type PageDirection } from './hooks/useMenuRoute';
 import { pageEase, pageVariants, stillPageVariants } from './motion';
+import { preloadUiSounds } from './lib/uiSound';
 import {
   getFamilyView,
   getProductSheet,
@@ -43,6 +44,10 @@ function MenuApp({
   const skipPaws = useRef(true);
   const pageKey = familyId ?? 'home';
   const travel = { direction, rtl: locale === 'ar' };
+
+  useEffect(() => {
+    void preloadUiSounds();
+  }, []);
 
   useEffect(() => {
     if (!ready) return;
@@ -211,42 +216,7 @@ function DeferredSheet({
   return <Sheet item={item} onClose={onClose} />;
 }
 
-function useMenuMeow() {
-  useEffect(() => {
-    const ctx = new AudioContext({ latencyHint: 'interactive' });
-    let buffer: AudioBuffer | null = null;
-    let gone = false;
-    void fetch('/maison/meow.wav')
-      .then((response) => response.arrayBuffer())
-      .then((data) => ctx.decodeAudioData(data))
-      .then((decoded) => {
-        if (!gone) buffer = decoded;
-      })
-      .catch(() => {});
-
-    const play = (event: PointerEvent) => {
-      if (event.button !== 0 || !buffer) return;
-      if (ctx.state === 'suspended') void ctx.resume();
-      const source = ctx.createBufferSource();
-      const gain = ctx.createGain();
-      source.buffer = buffer;
-      gain.gain.value = 0.85;
-      source.connect(gain);
-      gain.connect(ctx.destination);
-      source.start();
-    };
-
-    document.addEventListener('pointerdown', play, true);
-    return () => {
-      gone = true;
-      document.removeEventListener('pointerdown', play, true);
-      void ctx.close();
-    };
-  }, []);
-}
-
 export default function App() {
-  useMenuMeow();
   const skipSplash =
     typeof window !== 'undefined' && sessionStorage.getItem('catsgarden_splash') === '1';
   const [phase, setPhase] = useState<'splash' | 'fly' | 'done'>(skipSplash ? 'done' : 'splash');

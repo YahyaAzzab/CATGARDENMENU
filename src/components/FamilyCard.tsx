@@ -4,6 +4,7 @@ import { useI18n } from '../i18n/I18nContext';
 import { FamilyIllustration } from './FamilyIllustration';
 import { cardSpring, cascadeStagger, pageEase } from '../motion';
 import { prefetchMenuScreens } from '../lib/loadScreens';
+import { playUiSound } from '../lib/uiSound';
 
 interface FamilyCardProps {
   family: Family;
@@ -41,7 +42,10 @@ export function FamilyCard({
   return (
     <motion.button
       type="button"
-      onPointerDown={() => prefetchMenuScreens()}
+      onPointerDown={() => {
+        prefetchMenuScreens();
+        playUiSound('meow');
+      }}
       onClick={() => onSelect(family.id)}
       className={`relative flex h-full w-full flex-col overflow-hidden rounded-2xl text-start ${minH} ${
         featured ? 'col-span-2' : ''

@@ -352,13 +352,55 @@
 
 .piece-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 8px;
   align-items: center;
-  padding: 8px 10px 8px 8px;
+  padding: 8px 10px 8px 4px;
   border-radius: 18px;
   background: var(--paper);
   color: var(--ink);
+}
+
+.piece-grip {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: #b08968;
+  cursor: grab;
+  touch-action: none;
+}
+
+.piece-grip svg {
+  width: 10px;
+  height: 16px;
+  fill: currentColor;
+}
+
+.piece-grip.is-on,
+body.is-piece-dragging .piece-grip.is-on {
+  cursor: grabbing;
+  color: var(--gold-deep);
+}
+
+.piece-block.is-lifted {
+  position: relative;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.piece-block.is-lifted .piece-row {
+  transform: scale(1.02);
+  box-shadow: 0 14px 32px rgba(26, 18, 14, 0.16);
+}
+
+body.is-piece-dragging {
+  user-select: none;
+  cursor: grabbing;
 }
 
 .piece-block.is-open .piece-row {

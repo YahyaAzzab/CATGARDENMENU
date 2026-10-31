@@ -188,6 +188,72 @@ function diffPieces(saved: Draft[], rows: Draft[] | null) {
   }
 }
 
+function PieceGrip({
+  active,
+  onDragStart,
+  onDragOver,
+  onDragEnd,
+}: {
+  active: boolean
+  onDragStart: () => void
+  onDragOver: (point: { x: number; y: number }) => void
+  onDragEnd: () => void
+}) {
+  const timer = useRef<number | null>(null)
+  const dragging = useRef(false)
+  const origin = useRef(0)
+
+  const clearTimer = () => {
+    if (timer.current !== null) window.clearTimeout(timer.current)
+    timer.current = null
+  }
+
+  const end = () => {
+    clearTimer()
+    if (dragging.current) onDragEnd()
+    dragging.current = false
+  }
+
+  return (
+    <button
+      type="button"
+      className={active ? 'piece-grip is-on' : 'piece-grip'}
+      aria-label="Maintenir puis glisser pour changer l’ordre"
+      onClick={(event) => event.preventDefault()}
+      onPointerDown={(event) => {
+        if (event.button !== 0) return
+        const handle = event.currentTarget
+        const pointerId = event.pointerId
+        origin.current = event.clientY
+        clearTimer()
+        timer.current = window.setTimeout(() => {
+          dragging.current = true
+          handle.setPointerCapture(pointerId)
+          onDragStart()
+        }, 200)
+      }}
+      onPointerMove={(event) => {
+        if (!dragging.current) {
+          if (Math.abs(event.clientY - origin.current) > 10) clearTimer()
+          return
+        }
+        onDragOver({ x: event.clientX, y: event.clientY })
+      }}
+      onPointerUp={end}
+      onPointerCancel={end}
+    >
+      <svg viewBox="0 0 10 16" aria-hidden="true">
+        <circle cx="2.2" cy="2.2" r="1.15" />
+        <circle cx="7.8" cy="2.2" r="1.15" />
+        <circle cx="2.2" cy="8" r="1.15" />
+        <circle cx="7.8" cy="8" r="1.15" />
+        <circle cx="2.2" cy="13.8" r="1.15" />
+        <circle cx="7.8" cy="13.8" r="1.15" />
+      </svg>
+    </button>
+  )
+}
+
 function cleanDraft(row: Draft): Draft {
   return {
     ...row,
@@ -228,6 +294,47 @@ function missingTable(error: { code?: string; message?: string } | null) {
   return error.code === 'PGRST205' || /schema cache/i.test(error.message ?? '')
 }
 
+const SESSION_EXPIRED = 'La session a expiré. Reconnecte-toi pour continuer.'
+
+function isAuthError(error: { message?: string; code?: string; status?: number } | null | undefined) {
+  if (!error) return false
+  const message = error.message ?? ''
+  return (
+    error.status === 401 ||
+    error.code === 'PGRST301' ||
+    /jwt expired/i.test(message) ||
+    /invalid jwt/i.test(message) ||
+    /invalid claim/i.test(message)
+  )
+}
+
+let expiredNotice = ''
+
+function takeExpiredNotice() {
+  const note = expiredNotice
+  expiredNotice = ''
+  return note
+}
+
+async function ensureSession() {
+  if (!supabase) return false
+  const { data } = await supabase.auth.getSession()
+  const current = data.session
+  if (!current) return false
+  const expiresAt = (current.expires_at ?? 0) * 1000
+  if (expiresAt > Date.now() + 20_000) return true
+  const refreshed = await supabase.auth.refreshSession()
+  if (refreshed.data.session) return true
+  expiredNotice = SESSION_EXPIRED
+  await supabase.auth.signOut()
+  return false
+}
+
+async function dropExpiredSession() {
+  expiredNotice = SESSION_EXPIRED
+  await supabase?.auth.signOut()
+}
+
 export default function AdminApp() {
   const [session, setSession] = useState<Session | null>(null)
   const [ready, setReady] = useState(false)
@@ -242,12 +349,24 @@ export default function AdminApp() {
       setReady(true)
       return
     }
-    void supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session)
-      setReady(true)
+    let cancel = false
+    void (async () => {
+      const ok = await ensureSession()
+      if (cancel) return
+      if (!ok) setSession(null)
+      else {
+        const { data } = await supabase.auth.getSession()
+        if (!cancel) setSession(data.session)
+      }
+      if (!cancel) setReady(true)
+    })()
+    const { data } = supabase.auth.onAuthStateChange((_event, next) => {
+      if (!cancel) setSession(next)
     })
-    const { data } = supabase.auth.onAuthStateChange((_event, next) => setSession(next))
-    return () => data.subscription.unsubscribe()
+    return () => {
+      cancel = true
+      data.subscription.unsubscribe()
+    }
   }, [])
 
   useEffect(() => {
@@ -296,7 +415,7 @@ function Gate({
 }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
+  const [error, setError] = useState(takeExpiredNotice)
   const [pending, setPending] = useState(false)
 
   const submit = async (event: FormEvent) => {
@@ -556,7 +675,7 @@ function VitrineColumns() {
       <h2>Enregistrement dans la base</h2>
       <p>
         Supabase bloque encore l’écriture des pièces. Ouvre SQL Editor, lance ce script, puis clique à nouveau
-        sur Enregistrer dans la base.
+        sur Enregistrer.
       </p>
       <pre>{categoriesMigrationSql}</pre>
       <button className="solid" type="button" onClick={copy}>
@@ -656,7 +775,6 @@ function Pieces({ onReady }: { onReady: () => void }) {
   const categoryList = useCategoryList()
   const [rows, setRows] = useState<Draft[] | null>(null)
   const [saved, setSaved] = useState<Draft[]>([])
-  const [persistedIds, setPersistedIds] = useState<Set<string>>(new Set())
   const [error, setError] = useState('')
   const [query, setQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('toutes')
@@ -675,12 +793,23 @@ function Pieces({ onReady }: { onReady: () => void }) {
   const [columnsKnown, setColumnsKnown] = useState(false)
   const [needsConstraint, setNeedsConstraint] = useState(false)
   const savedRef = useRef(saved)
-  const persistedRef = useRef(persistedIds)
   savedRef.current = saved
-  persistedRef.current = persistedIds
 
   const load = async () => {
-    const result = await fetchPieces()
+    if (!(await ensureSession())) return
+    let result = await fetchPieces()
+    if (isAuthError(result.error)) {
+      const refreshed = await supabase?.auth.refreshSession()
+      if (!refreshed?.data.session) {
+        await dropExpiredSession()
+        return
+      }
+      result = await fetchPieces()
+      if (isAuthError(result.error)) {
+        await dropExpiredSession()
+        return
+      }
+    }
     const missing = missingTable(result.error)
     const flags = {
       hasCategory: result.hasCategory,
@@ -701,7 +830,6 @@ function Pieces({ onReady }: { onReady: () => void }) {
     } else {
       setError('')
     }
-    setPersistedIds(new Set(built.filter((row) => row.persisted).map((row) => row.id)))
     setRows(drafts)
     setSaved(drafts.map((row) => ({ ...row })))
   }
@@ -739,14 +867,14 @@ function Pieces({ onReady }: { onReady: () => void }) {
     const client = supabase
     if (!client) return { status: 'failed' as const, message: 'La connexion à la base est absente.' }
     if (drafts.length === 0) return { status: 'saved' as const }
-    const session = await client.auth.getSession()
-    if (!session.data.session) {
-      return { status: 'failed' as const, message: 'La session a expiré. Reconnecte-toi, puis réessaie.' }
+    if (!(await ensureSession())) {
+      return { status: 'failed' as const, message: SESSION_EXPIRED }
     }
     let image = true
     let category = true
     let moment = true
     let lastMessage = 'Les pièces n’ont pas pu être enregistrées dans la base.'
+    let refreshedAuth = false
     for (let attempt = 0; attempt < 6; attempt += 1) {
       const result = await client.from('pieces').upsert(drafts.map((row) => rowPayload(row, image, category, moment)))
       if (!result.error) {
@@ -783,19 +911,51 @@ function Pieces({ onReady }: { onReady: () => void }) {
         setColumnsKnown(true)
         continue
       }
+      if (isAuthError(result.error)) {
+        if (!refreshedAuth) {
+          refreshedAuth = true
+          const refreshed = await client.auth.refreshSession()
+          if (refreshed.data.session) continue
+        }
+        await dropExpiredSession()
+        return { status: 'failed' as const, message: SESSION_EXPIRED }
+      }
       lastMessage = result.error.message || lastMessage
       return { status: 'failed' as const, message: lastMessage }
     }
     return { status: 'failed' as const, message: lastMessage }
   }
 
-  const move = (index: number, direction: -1 | 1) => {
-    if (!rows) return
-    const nextIndex = index + direction
-    if (nextIndex < 0 || nextIndex >= rows.length) return
-    const next = rows.slice()
-    const [item] = next.splice(index, 1)
-    next.splice(nextIndex, 0, item)
+  const [dragId, setDragId] = useState<string | null>(null)
+  const rowsRef = useRef(rows)
+  const shownRef = useRef<Draft[]>([])
+  rowsRef.current = rows
+
+  const placePiece = (fromId: string, x: number, y: number) => {
+    const hit = document.elementFromPoint(x, y)?.closest('[data-piece-id]')
+    const overId = hit?.getAttribute('data-piece-id')
+    if (!overId || overId === fromId || !(hit instanceof HTMLElement)) return
+    const rect = hit.getBoundingClientRect()
+    const after = y > rect.top + rect.height / 2
+    const current = rowsRef.current
+    const visible = shownRef.current
+    if (!current) return
+    const order = visible.map((row) => row.id)
+    const from = order.indexOf(fromId)
+    let to = order.indexOf(overId)
+    if (from < 0 || to < 0) return
+    order.splice(from, 1)
+    if (from < to) to -= 1
+    order.splice(after ? to + 1 : to, 0, fromId)
+    if (order.every((id, index) => id === visible[index]?.id)) return
+    const byId = new Map(current.map((row) => [row.id, row]))
+    const queue = order.flatMap((id) => {
+      const row = byId.get(id)
+      return row ? [row] : []
+    })
+    const shownIds = new Set(order)
+    let cursor = 0
+    const next = current.map((row) => (shownIds.has(row.id) ? queue[cursor++] : row))
     setRows(next.map((row, sort) => ({ ...row, sort })))
   }
 
@@ -868,9 +1028,7 @@ function Pieces({ onReady }: { onReady: () => void }) {
     if (!rows || !supabase) return null
     const extra = pendingForm()
     if (extra === 'invalid') return 'Le nom et le prix sont nécessaires.'
-    const touchedIds = new Set(diff.touched.map((row) => row.id))
-    const unpersisted = rows.filter((row) => !persistedRef.current.has(row.id) && !touchedIds.has(row.id))
-    const batch = extra ? [...diff.touched, ...unpersisted, extra] : [...diff.touched, ...unpersisted]
+    const batch = extra ? [...diff.touched, extra] : [...diff.touched]
     for (const row of batch) {
       const price = Math.round(Number(row.price))
       if (!row.name.trim() || !Number.isFinite(price) || price < 0) return 'Le nom et le prix sont nécessaires.'
@@ -884,12 +1042,17 @@ function Pieces({ onReady }: { onReady: () => void }) {
         'id',
         diff.removed.map((row) => row.id),
       )
-      if (writeError) return 'Une pièce n’a pas pu être retirée.'
+      if (writeError) {
+        if (isAuthError(writeError)) {
+          await dropExpiredSession()
+          return SESSION_EXPIRED
+        }
+        return 'Une pièce n’a pas pu être retirée.'
+      }
     }
     const next = (extra ? [...rows, extra] : rows).map(cleanDraft)
     setRows(next)
     setSaved(next.map((row) => ({ ...row })))
-    setPersistedIds(new Set(next.map((row) => row.id)))
     clearFresh()
     setError('')
     return null
@@ -904,18 +1067,9 @@ function Pieces({ onReady }: { onReady: () => void }) {
 
   useChangeReport('pieces', 'Pièces', changeCount > 0, changeCount, savePieces, discardPieces)
 
-  const keepInBase = async () => {
-    if (!rows) return
-    const pending = rows.filter((row) => !persistedIds.has(row.id))
-    const result = await push(pending.map(cleanDraft))
-    if (result.status === 'failed') {
-      setError(result.message ?? 'Les pièces n’ont pas pu être enregistrées dans la base.')
-      return
-    }
-    setPersistedIds(new Set(rows.map((row) => row.id)))
-    setSaved(rows.map((row) => ({ ...row })))
-    setError('')
-  }
+  useEffect(() => {
+    return () => document.body.classList.remove('is-piece-dragging')
+  }, [])
 
   if (!rows) return <p className="note">Ouverture des pièces…</p>
 
@@ -925,8 +1079,8 @@ function Pieces({ onReady }: { onReady: () => void }) {
     if (needle && !fold(`${row.name} ${row.detail}`).includes(needle)) return false
     return true
   })
-  const unpersistedCount = rows.filter((row) => !persistedIds.has(row.id)).length
   const filterOptions = categoryList.slice()
+  shownRef.current = shown
   for (const row of rows) {
     if (!filterOptions.some((item) => item.id === row.category)) {
       filterOptions.push({
@@ -943,19 +1097,6 @@ function Pieces({ onReady }: { onReady: () => void }) {
   return (
     <div className="stack">
       {rows.length === 0 && !error && <p className="note">La vitrine est vide.</p>}
-      {unpersistedCount > 0 && (
-        <section className="schema-card">
-          <p>
-            {unpersistedCount === 1
-              ? 'Une pièce de la boutique n’est pas encore dans la base.'
-              : `${unpersistedCount} pièces de la boutique ne sont pas encore dans la base.`}{' '}
-            Enregistrez-les pour pouvoir les modifier ensuite.
-          </p>
-          <button className="solid" type="button" onClick={() => void keepInBase()}>
-            Enregistrer dans la base
-          </button>
-        </section>
-      )}
       {error && <p className="form-error">{error}</p>}
       {columnsKnown && !hasImage && <PhotoColumn />}
       {((columnsKnown && (!hasCategory || !hasMoments)) || needsConstraint) && <VitrineColumns />}
@@ -1057,12 +1198,35 @@ function Pieces({ onReady }: { onReady: () => void }) {
         <p className="note">Aucune pièce pour ce filtre.</p>
       )}
       {shown.map((row) => {
-        const index = rows.findIndex((item) => item.id === row.id)
         const thumb = row.imageUrl || pastryImages[row.id] || pastryFallback
         const open = openId === row.id
         return (
-        <div className={open ? 'piece-block is-open' : 'piece-block'} key={row.id}>
+        <div
+          className={
+            open
+              ? dragId === row.id
+                ? 'piece-block is-open is-lifted'
+                : 'piece-block is-open'
+              : dragId === row.id
+                ? 'piece-block is-lifted'
+                : 'piece-block'
+          }
+          key={row.id}
+          data-piece-id={row.id}
+        >
           <div className="piece-row">
+            <PieceGrip
+              active={dragId === row.id}
+              onDragStart={() => {
+                setDragId(row.id)
+                document.body.classList.add('is-piece-dragging')
+              }}
+              onDragOver={(point) => placePiece(row.id, point.x, point.y)}
+              onDragEnd={() => {
+                setDragId(null)
+                document.body.classList.remove('is-piece-dragging')
+              }}
+            />
             <button className="piece-open" type="button" onClick={() => setOpenId(open ? null : row.id)}>
               <img src={thumb} alt="" />
               <span>
@@ -1077,7 +1241,6 @@ function Pieces({ onReady }: { onReady: () => void }) {
                         .filter(Boolean)
                         .join(', ')}`
                     : ''}
-                  {row.signature ? ' · Populaire' : ''}
                   {row.visible ? '' : ' · Masquée'}
                   {!row.imageUrl && !pastryImages[row.id] ? ' · Sans photo' : ''}
                   {diff.freshIds.has(row.id) ? ' · nouvelle' : diff.dirtyIds.has(row.id) ? ' · modifiée' : ''}
@@ -1137,41 +1300,12 @@ function Pieces({ onReady }: { onReady: () => void }) {
             </label>
             <div className="choices">
               <Choice
-                kind="star"
-                pressed={row.signature}
-                title="Populaire"
-                hint={row.signature ? 'En haut de la boutique' : 'Le choix du chef'}
-                onToggle={() => {
-                  const on = !row.signature
-                  setRows(
-                    (current) =>
-                      current?.map((item) => ({
-                        ...item,
-                        signature: item.id === row.id ? on : on ? false : item.signature,
-                      })) ?? null,
-                  )
-                }}
-              />
-              <Choice
                 kind="check"
                 pressed={row.visible}
                 title="Visible"
                 hint={row.visible ? 'Dans la boutique' : 'Hors de la vitrine'}
                 onToggle={() => update(row.id, { visible: !row.visible })}
               />
-            </div>
-            <div className="row-actions">
-              <button className="ghost-ink" type="button" onClick={() => move(index, -1)} disabled={index === 0}>
-                Monter
-              </button>
-              <button
-                className="ghost-ink"
-                type="button"
-                onClick={() => move(index, 1)}
-                disabled={index === rows.length - 1}
-              >
-                Descendre
-              </button>
             </div>
           </div>
         </article>

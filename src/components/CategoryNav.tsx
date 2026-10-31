@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import type { Category } from '../data/types';
 import { useI18n } from '../i18n/I18nContext';
 import { CategoryIcon } from './Icons';
+import { playUiSound } from '../lib/uiSound';
 
 interface CategoryNavProps {
   categories: Category[];
@@ -73,6 +74,7 @@ export function CategoryNav({
         {showAll && (
           <motion.button
             data-cat="all"
+            onPointerDown={() => playUiSound('meow')}
             onClick={() => handleSelect(null)}
             whileTap={{ scale: 0.95 }}
             className={`category-pill flex-shrink-0 ${visualActive === null ? 'category-pill-active' : ''}`}
@@ -87,6 +89,7 @@ export function CategoryNav({
           <motion.button
             key={cat.id}
             data-cat={cat.id}
+            onPointerDown={() => playUiSound('meow')}
             onClick={() => handleSelect(cat.id)}
             whileTap={{ scale: 0.95 }}
             className={`category-pill flex-shrink-0 ${visualActive === cat.id ? 'category-pill-active' : ''}`}
