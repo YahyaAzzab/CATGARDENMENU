@@ -43,12 +43,12 @@ export function FamilyIllustration({
   const eager = priority || variant === 'header';
   const frame =
     variant === 'header'
-      ? 'absolute inset-0 h-full w-full object-cover object-[72%_center]'
-      : 'absolute inset-y-0 right-0 h-full w-[58%] object-cover object-center';
+      ? 'absolute inset-0 h-full w-full object-cover object-right'
+      : 'absolute inset-y-0 right-0 h-full w-[58%] object-cover object-right';
   const wash =
     variant === 'header'
-      ? 'bg-gradient-to-r from-[#FDF6EC] from-[6%] via-[#FDF6EC]/75 via-[34%] to-transparent to-[68%]'
-      : 'bg-gradient-to-r from-[#FDF6EC] from-[28%] via-[#FDF6EC]/92 via-[48%] to-transparent to-[70%]';
+      ? 'bg-gradient-to-r from-[#FDF6EC] from-[4%] via-[#FDF6EC]/85 via-[30%] to-transparent to-[52%]'
+      : 'bg-gradient-to-r from-[#FDF6EC] from-[6%] via-[#FDF6EC] via-[44%] to-transparent to-[62%]';
 
   return (
     <div

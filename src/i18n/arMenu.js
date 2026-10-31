@@ -218,7 +218,6 @@ export const arCopy = {
     'dessert-san-sebastian-chocolat': { name: 'سان سيباستيان بالشوكولاتة', description: 'تشيز كيك باسكي بالشوكولاتة' },
     'dessert-san-sebastian-pistache': { name: 'سان سيباستيان بالفستق', description: 'تشيز كيك باسكي بالفستق' },
     'dessert-pain-perdu': { name: 'خبز محمص', description: 'خبز محمص ذهبي ومكرمل' },
-    'dessert-croissant-four': { name: 'كرواسون الفرن نوتيلا وكراميل', description: 'كرواسون محمص في الفرن بنوتيلا وكراميل' },
     'dessert-healthy-bowl': { name: 'Healthy Bowl', description: 'وعاء ياغورت وفواكه طرية' },
     'dessert-salade-fruits': { name: 'سلطة الفواكه', description: 'تشكيلة فواكه الموسم الطرية' },
     'dessert-pain-chocolat': { name: 'بان بالشوكولاتة', description: 'فيينوازري بالشوكولاتة', servingNote: 'حتى الساعة 14' },

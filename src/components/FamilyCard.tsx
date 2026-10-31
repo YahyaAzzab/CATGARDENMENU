@@ -72,7 +72,7 @@ export function FamilyCard({
         <FamilyIllustration familyId={family.id} priority={index < 2} />
       </motion.div>
 
-      <div className={`relative z-10 mt-auto p-3 ${featured ? 'max-w-[62%]' : 'max-w-[68%]'}`}>
+      <div className={`relative z-10 mt-auto p-3 ${featured ? 'max-w-[46%]' : 'max-w-[50%]'}`}>
         <h3
           className={`font-bold leading-tight text-chocolate ${
             featured ? 'text-[1.15rem]' : 'text-[0.98rem]'

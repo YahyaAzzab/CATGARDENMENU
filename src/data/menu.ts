@@ -1973,18 +1973,6 @@ export const menuItems: MenuItem[] = [
     available: true,
   },
   {
-    id: 'dessert-croissant-four',
-    categoryId: 'gateaux-desserts',
-    nameFr: 'Croissant au four Nutella Caramel',
-    nameEn: 'Baked Croissant Nutella Caramel',
-    descriptionFr: 'Croissant doré au four, garni de Nutella et caramel',
-    descriptionEn: 'Oven-baked golden croissant with Nutella and caramel',
-    price: 45,
-    tags: ['chocolate'],
-    badges: ['new'],
-    available: true,
-  },
-  {
     id: 'dessert-healthy-bowl',
     categoryId: 'gateaux-desserts',
     nameFr: 'Healthy Bowl',
