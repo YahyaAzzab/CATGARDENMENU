@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type FormEvent, type PointerEvent as ReactPointerEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase, supabaseEnv } from '../lib/supabase'
 import { isTheme, orderStatuses, themes, type OrderLine, type OrderStatus, type ThemeId } from '../maison/house'
@@ -190,57 +190,25 @@ function diffPieces(saved: Draft[], rows: Draft[] | null) {
 
 function PieceGrip({
   active,
-  onDragStart,
-  onDragOver,
-  onDragEnd,
+  onPointerDown,
+  onPointerMove,
+  onPointerUp,
 }: {
   active: boolean
-  onDragStart: () => void
-  onDragOver: (point: { x: number; y: number }) => void
-  onDragEnd: () => void
+  onPointerDown: (event: ReactPointerEvent<HTMLButtonElement>) => void
+  onPointerMove: (event: ReactPointerEvent<HTMLButtonElement>) => void
+  onPointerUp: (event: ReactPointerEvent<HTMLButtonElement>) => void
 }) {
-  const timer = useRef<number | null>(null)
-  const dragging = useRef(false)
-  const origin = useRef(0)
-
-  const clearTimer = () => {
-    if (timer.current !== null) window.clearTimeout(timer.current)
-    timer.current = null
-  }
-
-  const end = () => {
-    clearTimer()
-    if (dragging.current) onDragEnd()
-    dragging.current = false
-  }
-
   return (
     <button
       type="button"
       className={active ? 'piece-grip is-on' : 'piece-grip'}
-      aria-label="Maintenir puis glisser pour changer l’ordre"
+      aria-label="Glisser pour changer l’ordre"
       onClick={(event) => event.preventDefault()}
-      onPointerDown={(event) => {
-        if (event.button !== 0) return
-        const handle = event.currentTarget
-        const pointerId = event.pointerId
-        origin.current = event.clientY
-        clearTimer()
-        timer.current = window.setTimeout(() => {
-          dragging.current = true
-          handle.setPointerCapture(pointerId)
-          onDragStart()
-        }, 200)
-      }}
-      onPointerMove={(event) => {
-        if (!dragging.current) {
-          if (Math.abs(event.clientY - origin.current) > 10) clearTimer()
-          return
-        }
-        onDragOver({ x: event.clientX, y: event.clientY })
-      }}
-      onPointerUp={end}
-      onPointerCancel={end}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerUp}
     >
       <svg viewBox="0 0 10 16" aria-hidden="true">
         <circle cx="2.2" cy="2.2" r="1.15" />
@@ -930,24 +898,30 @@ function Pieces({ onReady }: { onReady: () => void }) {
   const rowsRef = useRef(rows)
   const shownRef = useRef<Draft[]>([])
   rowsRef.current = rows
+  type DragSlot = { id: string; top: number; height: number; el: HTMLElement }
+  type PieceDrag = {
+    id: string
+    index: number
+    target: number
+    startPageY: number
+    originTop: number
+    height: number
+    gap: number
+    clientY: number
+    slots: DragSlot[]
+    raf: number
+  }
+  const dragRef = useRef<PieceDrag | null>(null)
 
-  const placePiece = (fromId: string, x: number, y: number) => {
-    const hit = document.elementFromPoint(x, y)?.closest('[data-piece-id]')
-    const overId = hit?.getAttribute('data-piece-id')
-    if (!overId || overId === fromId || !(hit instanceof HTMLElement)) return
-    const rect = hit.getBoundingClientRect()
-    const after = y > rect.top + rect.height / 2
+  const commitPieceOrder = (fromId: string, toIndex: number) => {
     const current = rowsRef.current
     const visible = shownRef.current
     if (!current) return
     const order = visible.map((row) => row.id)
     const from = order.indexOf(fromId)
-    let to = order.indexOf(overId)
-    if (from < 0 || to < 0) return
+    if (from < 0 || toIndex < 0 || toIndex >= order.length || from === toIndex) return
     order.splice(from, 1)
-    if (from < to) to -= 1
-    order.splice(after ? to + 1 : to, 0, fromId)
-    if (order.every((id, index) => id === visible[index]?.id)) return
+    order.splice(toIndex, 0, fromId)
     const byId = new Map(current.map((row) => [row.id, row]))
     const queue = order.flatMap((id) => {
       const row = byId.get(id)
@@ -957,6 +931,98 @@ function Pieces({ onReady }: { onReady: () => void }) {
     let cursor = 0
     const next = current.map((row) => (shownIds.has(row.id) ? queue[cursor++] : row))
     setRows(next.map((row, sort) => ({ ...row, sort })))
+  }
+
+  const paintDrag = (drag: PieceDrag, pageY: number) => {
+    const dy = pageY - drag.startPageY
+    const center = drag.originTop + drag.height / 2 + dy
+    let target = 0
+    for (let index = 0; index < drag.slots.length; index += 1) {
+      if (index === drag.index) continue
+      const slot = drag.slots[index]
+      if (slot.top + slot.height / 2 < center) target += 1
+    }
+    drag.target = target
+    const shift = drag.height + drag.gap
+    drag.slots.forEach((slot, index) => {
+      if (index === drag.index) {
+        slot.el.style.transform = `translate3d(0, ${dy}px, 0)`
+        return
+      }
+      let offset = 0
+      if (drag.index < target && index > drag.index && index <= target) offset = -shift
+      else if (drag.index > target && index >= target && index < drag.index) offset = shift
+      slot.el.style.transform = offset ? `translate3d(0, ${offset}px, 0)` : ''
+    })
+  }
+
+  const stopDrag = () => {
+    const drag = dragRef.current
+    if (!drag) return
+    dragRef.current = null
+    cancelAnimationFrame(drag.raf)
+    drag.slots.forEach((slot) => {
+      slot.el.style.transform = ''
+      slot.el.style.zIndex = ''
+      slot.el.style.transition = ''
+    })
+    document.body.classList.remove('is-piece-dragging')
+    setDragId(null)
+    commitPieceOrder(drag.id, drag.target)
+  }
+
+  const trackDrag = () => {
+    const drag = dragRef.current
+    if (!drag) return
+    const edge = 88
+    const view = window.innerHeight
+    if (drag.clientY < edge) window.scrollBy(0, -Math.min(18, Math.max(6, (edge - drag.clientY) / 3)))
+    else if (drag.clientY > view - edge) {
+      window.scrollBy(0, Math.min(18, Math.max(6, (drag.clientY - (view - edge)) / 3)))
+    }
+    paintDrag(drag, drag.clientY + window.scrollY)
+    if (dragRef.current !== drag) return
+    drag.raf = requestAnimationFrame(trackDrag)
+  }
+
+  const beginDrag = (id: string, event: ReactPointerEvent<HTMLButtonElement>) => {
+    if (event.button !== 0 || dragRef.current) return
+    const nodes = [...document.querySelectorAll<HTMLElement>('[data-piece-id]')]
+    const slots: DragSlot[] = nodes.map((el) => {
+      const rect = el.getBoundingClientRect()
+      return { id: el.dataset.pieceId ?? '', top: rect.top + window.scrollY, height: rect.height, el }
+    })
+    const index = slots.findIndex((slot) => slot.id === id)
+    if (index < 0) return
+    const current = slots[index]
+    const next = slots[index + 1]
+    const gap = next ? Math.max(0, next.top - (current.top + current.height)) : 14
+    event.preventDefault()
+    event.currentTarget.setPointerCapture(event.pointerId)
+    current.el.style.transition = 'none'
+    current.el.style.zIndex = '5'
+    const drag: PieceDrag = {
+      id,
+      index,
+      target: index,
+      startPageY: event.pageY,
+      originTop: current.top,
+      height: current.height,
+      gap,
+      clientY: event.clientY,
+      slots,
+      raf: 0,
+    }
+    dragRef.current = drag
+    document.body.classList.add('is-piece-dragging')
+    setDragId(id)
+    drag.raf = requestAnimationFrame(trackDrag)
+  }
+
+  const moveDrag = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    const drag = dragRef.current
+    if (!drag) return
+    drag.clientY = event.clientY
   }
 
   const remove = (id: string) => {
@@ -1068,7 +1134,11 @@ function Pieces({ onReady }: { onReady: () => void }) {
   useChangeReport('pieces', 'Pièces', changeCount > 0, changeCount, savePieces, discardPieces)
 
   useEffect(() => {
-    return () => document.body.classList.remove('is-piece-dragging')
+    return () => {
+      const drag = dragRef.current
+      if (drag) cancelAnimationFrame(drag.raf)
+      document.body.classList.remove('is-piece-dragging')
+    }
   }, [])
 
   if (!rows) return <p className="note">Ouverture des pièces…</p>
@@ -1217,15 +1287,9 @@ function Pieces({ onReady }: { onReady: () => void }) {
           <div className="piece-row">
             <PieceGrip
               active={dragId === row.id}
-              onDragStart={() => {
-                setDragId(row.id)
-                document.body.classList.add('is-piece-dragging')
-              }}
-              onDragOver={(point) => placePiece(row.id, point.x, point.y)}
-              onDragEnd={() => {
-                setDragId(null)
-                document.body.classList.remove('is-piece-dragging')
-              }}
+              onPointerDown={(event) => beginDrag(row.id, event)}
+              onPointerMove={moveDrag}
+              onPointerUp={stopDrag}
             />
             <button className="piece-open" type="button" onClick={() => setOpenId(open ? null : row.id)}>
               <img src={thumb} alt="" />

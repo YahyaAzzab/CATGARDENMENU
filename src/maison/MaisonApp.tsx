@@ -5,6 +5,7 @@ import { PawPrint } from '../components/Icons'
 import { CartProvider, orderHref, useCart } from './cart'
 import { CatalogProvider, useCatalog } from './catalog'
 import { defaultCategoryArt, type Category } from './categories'
+import { themeById } from './house'
 import { getMoment, popularFor } from './moment'
 import { rememberOrder } from './orders'
 import { settle } from './motion'
@@ -378,6 +379,7 @@ function House() {
                 groups={collections}
                 live={live}
                 reduce={!!reduce}
+                season={theme === 'maison' ? '' : themeById(theme).name}
                 onOpen={openCollection}
               />
               <PopularRail
@@ -466,15 +468,18 @@ function Collections({
   groups,
   live,
   reduce,
+  season,
   onOpen,
 }: {
   groups: CollectionGroup[]
   live: boolean
   reduce: boolean
+  season: string
   onOpen: (id: string) => void
 }) {
   return (
     <section className="collections" aria-labelledby="collections-title">
+      {season && <p className="season-line">{season}</p>}
       <header className="block-head vitrine-head">
         <h2 id="collections-title">Collections</h2>
       </header>
@@ -516,7 +521,47 @@ function PopularRail({
   reduce: boolean
   onOpen: (id: string, source: HTMLElement) => void
 }) {
-  const [held, setHeld] = useState(false)
+  const scroller = useRef<HTMLDivElement>(null)
+  const paused = useRef(false)
+  const hovering = useRef(false)
+  const drag = useRef({ x: 0, y: 0, left: 0, moved: false, active: false })
+  const resume = useRef(0)
+
+  const hold = () => {
+    paused.current = true
+    window.clearTimeout(resume.current)
+  }
+
+  const release = () => {
+    drag.current.active = false
+    window.clearTimeout(resume.current)
+    resume.current = window.setTimeout(() => {
+      if (!hovering.current && !drag.current.active) paused.current = false
+    }, 520)
+  }
+
+  useEffect(() => {
+    const el = scroller.current
+    if (!el || reduce) return
+    let frame = 0
+    let last = performance.now()
+    const tick = (now: number) => {
+      const dt = Math.min(now - last, 34)
+      last = now
+      const half = el.scrollWidth / 2
+      if (!paused.current && half > el.clientWidth + 16) {
+        el.scrollLeft += (half / 40) * (dt / 1000)
+        if (el.scrollLeft >= half) el.scrollLeft -= half
+      }
+      frame = requestAnimationFrame(tick)
+    }
+    frame = requestAnimationFrame(tick)
+    return () => {
+      cancelAnimationFrame(frame)
+      window.clearTimeout(resume.current)
+    }
+  }, [reduce, items])
+
   if (items.length === 0) return null
 
   return (
@@ -525,16 +570,58 @@ function PopularRail({
         <h2 id="rail-title">Produits populaires</h2>
       </header>
       <div
-        className={held ? 'rail-window is-held' : 'rail-window'}
-        onPointerDown={() => setHeld(true)}
-        onPointerUp={() => setHeld(false)}
-        onPointerCancel={() => setHeld(false)}
-        onPointerLeave={() => setHeld(false)}
+        ref={scroller}
+        className="rail-window"
+        onPointerDown={(event) => {
+          if (event.pointerType === 'mouse' && event.button !== 0) return
+          const el = scroller.current
+          drag.current = {
+            x: event.clientX,
+            y: event.clientY,
+            left: el?.scrollLeft ?? 0,
+            moved: false,
+            active: true,
+          }
+          hold()
+        }}
+        onPointerMove={(event) => {
+          const start = drag.current
+          if (!start.active) return
+          if (Math.abs(event.clientX - start.x) > 8 || Math.abs(event.clientY - start.y) > 8) start.moved = true
+        }}
+        onScroll={() => {
+          const start = drag.current
+          const el = scroller.current
+          if (!start.active || !el) return
+          if (Math.abs(el.scrollLeft - start.left) > 6) start.moved = true
+        }}
+        onPointerUp={release}
+        onPointerCancel={release}
+        onPointerEnter={(event) => {
+          if (event.pointerType !== 'mouse') return
+          hovering.current = true
+          hold()
+        }}
+        onPointerLeave={(event) => {
+          if (event.pointerType !== 'mouse') return
+          hovering.current = false
+          if (!drag.current.active) paused.current = false
+        }}
+        onWheel={(event) => {
+          if (Math.abs(event.deltaX) <= Math.abs(event.deltaY)) return
+          hold()
+          release()
+        }}
+        onClickCapture={(event) => {
+          if (!drag.current.moved) return
+          event.preventDefault()
+          event.stopPropagation()
+          drag.current.moved = false
+        }}
       >
         <div className="rail-track">
           <RailSet items={items} live={live} reduce={reduce} onOpen={onOpen} />
-          {/* Copie du rail : le CSS ne l’affiche que lorsque le défilement continu tourne. */}
-          <RailSet items={items} live={live} reduce={reduce} onOpen={onOpen} decorative />
+          {!reduce && <RailSet items={items} live={live} reduce={reduce} onOpen={onOpen} decorative />}
         </div>
       </div>
     </section>
@@ -598,7 +685,6 @@ function RailCard({
       <button
         type="button"
         className="rail-hit"
-        disabled={decorative}
         tabIndex={decorative ? -1 : undefined}
         aria-label={`${pastry.name}, ${formatDh(pastry.price)}`}
         onClick={(event) => onOpen(pastry.id, event.currentTarget)}
@@ -613,21 +699,19 @@ function RailCard({
       </button>
       <span className="rail-foot">
         <span className="price">{formatDh(pastry.price)}</span>
-        <RailAdd pastry={pastry} inert={decorative} />
+        <RailAdd pastry={pastry} quiet={decorative} />
       </span>
     </motion.article>
   )
 }
 
-function RailAdd({ pastry, inert }: { pastry: Pastry; inert: boolean }) {
+function RailAdd({ pastry, quiet }: { pastry: Pastry; quiet: boolean }) {
   const { add } = useCart()
-  if (inert) {
-    return <span className="round-add is-inert">+</span>
-  }
   return (
     <button
       type="button"
       className="round-add"
+      tabIndex={quiet ? -1 : undefined}
       aria-label={`Ajouter ${pastry.name} au panier`}
       onClick={(event) => {
         event.stopPropagation()

@@ -10,6 +10,7 @@
   /* Couleur d’accent de la saison, utilisée par la vitrine. */
   --season: #c6a36a;
   --season-art: none;
+  position: relative;
   min-height: 100dvh;
   background: var(--cream);
   color: var(--ink);
@@ -39,8 +40,36 @@
   color: var(--ink);
 }
 
+.maison main,
+.maison-footer {
+  position: relative;
+  z-index: 1;
+}
+
 .maison main {
   padding: 0;
+}
+
+.maison:not([data-theme='maison']) {
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--season) 46%, var(--cream)) 0, var(--cream) 760px);
+}
+
+.maison:not([data-theme='maison'])::before {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 1480px;
+  background-image: var(--season-art);
+  background-repeat: no-repeat;
+  background-position: center 96px;
+  background-size: min(920px, 128%) auto;
+  opacity: 0.2;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 10%, #000 68%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 10%, #000 68%, transparent 100%);
 }
 
 /* ─── En-tête ─────────────────────────────────────────────── */
@@ -63,7 +92,7 @@
 
 .maison-header.is-scrolled {
   background: var(--night);
-  box-shadow: 0 1px 0 color-mix(in srgb, var(--season) 40%, transparent);
+  box-shadow: 0 2px 0 var(--season);
 }
 
 .brand-link {
@@ -146,32 +175,21 @@
   padding: calc(136px + env(safe-area-inset-top)) 22px 8px;
 }
 
+.season-line {
+  margin: 0 0 14px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--gold-deep);
+}
+
 .vitrine-head {
   margin-bottom: 16px;
 }
 
 .vitrine-head h2 {
   font-size: clamp(2rem, 7vw, 3rem);
-}
-
-.collections::before {
-  content: '';
-  position: absolute;
-  z-index: 0;
-  inset: 0 0 18%;
-  background-image: var(--season-art);
-  background-repeat: no-repeat;
-  background-position: center top;
-  background-size: min(920px, 100%) auto;
-  opacity: 0.22;
-  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 18%, transparent 100%);
-  mask-image: linear-gradient(to bottom, transparent, #000 18%, transparent 100%);
-  pointer-events: none;
-}
-
-.collections > * {
-  position: relative;
-  z-index: 1;
 }
 
 .tile-grid {
@@ -264,12 +282,18 @@
   padding: 0 22px;
 }
 
+.rail .block-head h2 {
+  color: var(--gold-deep);
+}
+
 .rail-window {
   overflow-x: auto;
   overflow-y: hidden;
   padding: 4px 0 10px;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x pan-y;
 }
 
 .rail-window::-webkit-scrollbar {
@@ -290,7 +314,7 @@
 }
 
 .rail-set[aria-hidden='true'] {
-  display: none;
+  display: flex;
 }
 
 .maison .rail-card {
@@ -619,9 +643,9 @@
   flex: none;
   width: 34px;
   height: 34px;
-  border: 1px solid color-mix(in srgb, var(--gold) 60%, transparent);
+  border: 1px solid var(--gold);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--gold) 12%, var(--paper));
+  background: color-mix(in srgb, var(--gold) 28%, var(--paper));
   color: var(--gold-deep);
   font-size: 1.05rem;
   line-height: 1;
@@ -678,37 +702,6 @@
 
 .tile-arrow {
   transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-/* ─── Rail : défilement continu, y compris sur téléphone ── */
-
-@media (prefers-reduced-motion: no-preference) {
-  .rail-window {
-    overflow: hidden;
-  }
-
-  .rail-set[aria-hidden='true'] {
-    display: flex;
-  }
-
-  .rail-track {
-    animation: rail-drift 40s linear infinite;
-    -webkit-animation: rail-drift 40s linear infinite;
-    will-change: transform;
-  }
-
-  .rail-window.is-held .rail-track {
-    animation-play-state: paused;
-    -webkit-animation-play-state: paused;
-  }
-}
-
-@media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  .rail-window:hover .rail-track,
-  .rail-window:focus-within .rail-track {
-    animation-play-state: paused;
-    -webkit-animation-play-state: paused;
-  }
 }
 
 /* ─── Pied de page ────────────────────────────────────────── */
@@ -1336,15 +1329,6 @@
   }
 }
 
-@keyframes rail-drift {
-  from {
-    transform: translate3d(0, 0, 0);
-  }
-  to {
-    transform: translate3d(-50%, 0, 0);
-  }
-}
-
 @keyframes drip-breathe {
   0%,
   100% {
@@ -1356,10 +1340,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .rail-track {
-    animation: none;
-  }
-
   .now-dot {
     animation: none;
   }

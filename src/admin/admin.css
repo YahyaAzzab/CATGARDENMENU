@@ -390,17 +390,24 @@ body.is-piece-dragging .piece-grip.is-on {
 .piece-block.is-lifted {
   position: relative;
   z-index: 4;
-  pointer-events: none;
 }
 
 .piece-block.is-lifted .piece-row {
-  transform: scale(1.02);
-  box-shadow: 0 14px 32px rgba(26, 18, 14, 0.16);
+  box-shadow: 0 16px 36px rgba(26, 18, 14, 0.18);
 }
 
 body.is-piece-dragging {
   user-select: none;
   cursor: grabbing;
+  touch-action: none;
+}
+
+body.is-piece-dragging .piece-block {
+  transition: transform 160ms ease;
+}
+
+body.is-piece-dragging .piece-block.is-lifted {
+  transition: none;
 }
 
 .piece-block.is-open .piece-row {
