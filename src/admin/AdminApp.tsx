@@ -739,6 +739,129 @@ function Choice({
   )
 }
 
+type DragSlot = { id: string; top: number; height: number; el: HTMLElement }
+type ListDrag = {
+  id: string
+  index: number
+  target: number
+  startPageY: number
+  originTop: number
+  height: number
+  gap: number
+  clientY: number
+  slots: DragSlot[]
+  raf: number
+}
+
+function useListDrag(attribute: string, onCommit: (fromId: string, toIndex: number) => void) {
+  const [dragId, setDragId] = useState<string | null>(null)
+  const dragRef = useRef<ListDrag | null>(null)
+  const commitRef = useRef(onCommit)
+  commitRef.current = onCommit
+
+  const paintDrag = (drag: ListDrag, pageY: number) => {
+    const dy = pageY - drag.startPageY
+    const center = drag.originTop + drag.height / 2 + dy
+    let target = 0
+    for (let index = 0; index < drag.slots.length; index += 1) {
+      if (index === drag.index) continue
+      const slot = drag.slots[index]
+      if (slot.top + slot.height / 2 < center) target += 1
+    }
+    drag.target = target
+    const shift = drag.height + drag.gap
+    drag.slots.forEach((slot, index) => {
+      if (index === drag.index) {
+        slot.el.style.transform = `translate3d(0, ${dy}px, 0)`
+        return
+      }
+      let offset = 0
+      if (drag.index < target && index > drag.index && index <= target) offset = -shift
+      else if (drag.index > target && index >= target && index < drag.index) offset = shift
+      slot.el.style.transform = offset ? `translate3d(0, ${offset}px, 0)` : ''
+    })
+  }
+
+  const stopDrag = () => {
+    const drag = dragRef.current
+    if (!drag) return
+    dragRef.current = null
+    cancelAnimationFrame(drag.raf)
+    drag.slots.forEach((slot) => {
+      slot.el.style.transform = ''
+      slot.el.style.zIndex = ''
+      slot.el.style.transition = ''
+    })
+    document.body.classList.remove('is-piece-dragging')
+    setDragId(null)
+    commitRef.current(drag.id, drag.target)
+  }
+
+  const trackDrag = () => {
+    const drag = dragRef.current
+    if (!drag) return
+    const edge = 88
+    const view = window.innerHeight
+    if (drag.clientY < edge) window.scrollBy(0, -Math.min(18, Math.max(6, (edge - drag.clientY) / 3)))
+    else if (drag.clientY > view - edge) {
+      window.scrollBy(0, Math.min(18, Math.max(6, (drag.clientY - (view - edge)) / 3)))
+    }
+    paintDrag(drag, drag.clientY + window.scrollY)
+    if (dragRef.current !== drag) return
+    drag.raf = requestAnimationFrame(trackDrag)
+  }
+
+  const beginDrag = (id: string, event: ReactPointerEvent<HTMLButtonElement>) => {
+    if (event.button !== 0 || dragRef.current) return
+    const nodes = [...document.querySelectorAll<HTMLElement>(`[${attribute}]`)]
+    const slots: DragSlot[] = nodes.map((el) => {
+      const rect = el.getBoundingClientRect()
+      return { id: el.getAttribute(attribute) ?? '', top: rect.top + window.scrollY, height: rect.height, el }
+    })
+    const index = slots.findIndex((slot) => slot.id === id)
+    if (index < 0) return
+    const current = slots[index]
+    const next = slots[index + 1]
+    const gap = next ? Math.max(0, next.top - (current.top + current.height)) : 14
+    event.preventDefault()
+    event.currentTarget.setPointerCapture(event.pointerId)
+    current.el.style.transition = 'none'
+    current.el.style.zIndex = '5'
+    const drag: ListDrag = {
+      id,
+      index,
+      target: index,
+      startPageY: event.pageY,
+      originTop: current.top,
+      height: current.height,
+      gap,
+      clientY: event.clientY,
+      slots,
+      raf: 0,
+    }
+    dragRef.current = drag
+    document.body.classList.add('is-piece-dragging')
+    setDragId(id)
+    drag.raf = requestAnimationFrame(trackDrag)
+  }
+
+  const moveDrag = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    const drag = dragRef.current
+    if (!drag) return
+    drag.clientY = event.clientY
+  }
+
+  useEffect(() => {
+    return () => {
+      const drag = dragRef.current
+      if (drag) cancelAnimationFrame(drag.raf)
+      document.body.classList.remove('is-piece-dragging')
+    }
+  }, [])
+
+  return { dragId, beginDrag, moveDrag, stopDrag }
+}
+
 function Pieces({ onReady }: { onReady: () => void }) {
   const categoryList = useCategoryList()
   const [rows, setRows] = useState<Draft[] | null>(null)
@@ -761,7 +884,32 @@ function Pieces({ onReady }: { onReady: () => void }) {
   const [columnsKnown, setColumnsKnown] = useState(false)
   const [needsConstraint, setNeedsConstraint] = useState(false)
   const savedRef = useRef(saved)
+  const rowsRef = useRef(rows)
+  const shownRef = useRef<Draft[]>([])
   savedRef.current = saved
+  rowsRef.current = rows
+
+  const reorderShown = (fromId: string, toIndex: number) => {
+    const current = rowsRef.current
+    const visible = shownRef.current
+    if (!current) return
+    const order = visible.map((row) => row.id)
+    const from = order.indexOf(fromId)
+    if (from < 0 || toIndex < 0 || toIndex >= order.length || from === toIndex) return
+    order.splice(from, 1)
+    order.splice(toIndex, 0, fromId)
+    const byId = new Map(current.map((row) => [row.id, row]))
+    const queue = order.flatMap((id) => {
+      const row = byId.get(id)
+      return row ? [row] : []
+    })
+    const shownIds = new Set(order)
+    let cursor = 0
+    const next = current.map((row) => (shownIds.has(row.id) ? queue[cursor++] : row))
+    setRows(next.map((row, sort) => ({ ...row, sort })))
+  }
+
+  const { dragId, beginDrag, moveDrag, stopDrag } = useListDrag('data-piece-id', reorderShown)
 
   const load = async () => {
     if (!(await ensureSession())) return
@@ -894,137 +1042,6 @@ function Pieces({ onReady }: { onReady: () => void }) {
     return { status: 'failed' as const, message: lastMessage }
   }
 
-  const [dragId, setDragId] = useState<string | null>(null)
-  const rowsRef = useRef(rows)
-  const shownRef = useRef<Draft[]>([])
-  rowsRef.current = rows
-  type DragSlot = { id: string; top: number; height: number; el: HTMLElement }
-  type PieceDrag = {
-    id: string
-    index: number
-    target: number
-    startPageY: number
-    originTop: number
-    height: number
-    gap: number
-    clientY: number
-    slots: DragSlot[]
-    raf: number
-  }
-  const dragRef = useRef<PieceDrag | null>(null)
-
-  const commitPieceOrder = (fromId: string, toIndex: number) => {
-    const current = rowsRef.current
-    const visible = shownRef.current
-    if (!current) return
-    const order = visible.map((row) => row.id)
-    const from = order.indexOf(fromId)
-    if (from < 0 || toIndex < 0 || toIndex >= order.length || from === toIndex) return
-    order.splice(from, 1)
-    order.splice(toIndex, 0, fromId)
-    const byId = new Map(current.map((row) => [row.id, row]))
-    const queue = order.flatMap((id) => {
-      const row = byId.get(id)
-      return row ? [row] : []
-    })
-    const shownIds = new Set(order)
-    let cursor = 0
-    const next = current.map((row) => (shownIds.has(row.id) ? queue[cursor++] : row))
-    setRows(next.map((row, sort) => ({ ...row, sort })))
-  }
-
-  const paintDrag = (drag: PieceDrag, pageY: number) => {
-    const dy = pageY - drag.startPageY
-    const center = drag.originTop + drag.height / 2 + dy
-    let target = 0
-    for (let index = 0; index < drag.slots.length; index += 1) {
-      if (index === drag.index) continue
-      const slot = drag.slots[index]
-      if (slot.top + slot.height / 2 < center) target += 1
-    }
-    drag.target = target
-    const shift = drag.height + drag.gap
-    drag.slots.forEach((slot, index) => {
-      if (index === drag.index) {
-        slot.el.style.transform = `translate3d(0, ${dy}px, 0)`
-        return
-      }
-      let offset = 0
-      if (drag.index < target && index > drag.index && index <= target) offset = -shift
-      else if (drag.index > target && index >= target && index < drag.index) offset = shift
-      slot.el.style.transform = offset ? `translate3d(0, ${offset}px, 0)` : ''
-    })
-  }
-
-  const stopDrag = () => {
-    const drag = dragRef.current
-    if (!drag) return
-    dragRef.current = null
-    cancelAnimationFrame(drag.raf)
-    drag.slots.forEach((slot) => {
-      slot.el.style.transform = ''
-      slot.el.style.zIndex = ''
-      slot.el.style.transition = ''
-    })
-    document.body.classList.remove('is-piece-dragging')
-    setDragId(null)
-    commitPieceOrder(drag.id, drag.target)
-  }
-
-  const trackDrag = () => {
-    const drag = dragRef.current
-    if (!drag) return
-    const edge = 88
-    const view = window.innerHeight
-    if (drag.clientY < edge) window.scrollBy(0, -Math.min(18, Math.max(6, (edge - drag.clientY) / 3)))
-    else if (drag.clientY > view - edge) {
-      window.scrollBy(0, Math.min(18, Math.max(6, (drag.clientY - (view - edge)) / 3)))
-    }
-    paintDrag(drag, drag.clientY + window.scrollY)
-    if (dragRef.current !== drag) return
-    drag.raf = requestAnimationFrame(trackDrag)
-  }
-
-  const beginDrag = (id: string, event: ReactPointerEvent<HTMLButtonElement>) => {
-    if (event.button !== 0 || dragRef.current) return
-    const nodes = [...document.querySelectorAll<HTMLElement>('[data-piece-id]')]
-    const slots: DragSlot[] = nodes.map((el) => {
-      const rect = el.getBoundingClientRect()
-      return { id: el.dataset.pieceId ?? '', top: rect.top + window.scrollY, height: rect.height, el }
-    })
-    const index = slots.findIndex((slot) => slot.id === id)
-    if (index < 0) return
-    const current = slots[index]
-    const next = slots[index + 1]
-    const gap = next ? Math.max(0, next.top - (current.top + current.height)) : 14
-    event.preventDefault()
-    event.currentTarget.setPointerCapture(event.pointerId)
-    current.el.style.transition = 'none'
-    current.el.style.zIndex = '5'
-    const drag: PieceDrag = {
-      id,
-      index,
-      target: index,
-      startPageY: event.pageY,
-      originTop: current.top,
-      height: current.height,
-      gap,
-      clientY: event.clientY,
-      slots,
-      raf: 0,
-    }
-    dragRef.current = drag
-    document.body.classList.add('is-piece-dragging')
-    setDragId(id)
-    drag.raf = requestAnimationFrame(trackDrag)
-  }
-
-  const moveDrag = (event: ReactPointerEvent<HTMLButtonElement>) => {
-    const drag = dragRef.current
-    if (!drag) return
-    drag.clientY = event.clientY
-  }
-
   const remove = (id: string) => {
     setError('')
     setPendingDelete(null)
@@ -1132,14 +1149,6 @@ function Pieces({ onReady }: { onReady: () => void }) {
   }
 
   useChangeReport('pieces', 'Pièces', changeCount > 0, changeCount, savePieces, discardPieces)
-
-  useEffect(() => {
-    return () => {
-      const drag = dragRef.current
-      if (drag) cancelAnimationFrame(drag.raf)
-      document.body.classList.remove('is-piece-dragging')
-    }
-  }, [])
 
   if (!rows) return <p className="note">Ouverture des pièces…</p>
 
@@ -1421,8 +1430,24 @@ function CategoriesPanel() {
   const [freshBlurb, setFreshBlurb] = useState('')
   const [freshPhoto, setFreshPhoto] = useState(defaultCategoryPhoto)
   const [pendingDelete, setPendingDelete] = useState<string | null>(null)
+  const [openId, setOpenId] = useState<string | null>(null)
   const savedRef = useRef(saved)
+  const rowsRef = useRef(rows)
   savedRef.current = saved
+  rowsRef.current = rows
+
+  const reorderCategories = (fromId: string, toIndex: number) => {
+    const current = rowsRef.current
+    if (!current) return
+    const from = current.findIndex((row) => row.id === fromId)
+    if (from < 0 || toIndex < 0 || toIndex >= current.length || from === toIndex) return
+    const next = current.slice()
+    const [item] = next.splice(from, 1)
+    next.splice(toIndex, 0, item)
+    setRows(next.map((row, sort) => ({ ...row, sort })))
+  }
+
+  const { dragId, beginDrag, moveDrag, stopDrag } = useListDrag('data-category-id', reorderCategories)
 
   useEffect(() => {
     let cancel = false
@@ -1465,17 +1490,8 @@ function CategoriesPanel() {
     }
     setError('')
     setPendingDelete(null)
+    setOpenId((current) => (current === id ? null : current))
     setRows((current) => current?.filter((row) => row.id !== id) ?? null)
-  }
-
-  const move = (index: number, direction: -1 | 1) => {
-    if (!rows) return
-    const nextIndex = index + direction
-    if (nextIndex < 0 || nextIndex >= rows.length) return
-    const next = rows.slice()
-    const [item] = next.splice(index, 1)
-    next.splice(nextIndex, 0, item)
-    setRows(next.map((row, sort) => ({ ...row, sort })))
   }
 
   const clearFresh = () => {
@@ -1501,6 +1517,7 @@ function CategoriesPanel() {
     setRows((current) => [...(current ?? []), created])
     clearFresh()
     setError('')
+    setOpenId(created.id)
   }
 
   const formStarted =
@@ -1621,56 +1638,73 @@ function CategoriesPanel() {
           </div>
         </article>
       )}
-      {rows.map((row, index) => {
+      {rows.map((row) => {
         const count = usage?.filter((id) => id === row.id).length
+        const open = openId === row.id
+        const countLabel = count === undefined ? 'Pièces…' : count === 1 ? '1 pièce' : `${count} pièces`
         return (
-          <article className="piece-edit is-plain" key={row.id}>
-            <div className="fields">
-              <label>
-                Nom
-                <input value={row.name} onChange={(event) => update(row.id, { name: event.target.value })} />
-              </label>
-              <label>
-                Description
-                <textarea value={row.blurb} onChange={(event) => update(row.id, { blurb: event.target.value })} />
-              </label>
-              <CategoryPhoto
-                photo={row.photo}
-                onPick={(photo) => update(row.id, { photo })}
-                onError={() => setError('Cette image n’a pas pu être lue.')}
+          <div
+            className={
+              open
+                ? dragId === row.id
+                  ? 'piece-block is-open is-lifted'
+                  : 'piece-block is-open'
+                : dragId === row.id
+                  ? 'piece-block is-lifted'
+                  : 'piece-block'
+            }
+            data-category-id={row.id}
+            key={row.id}
+          >
+            <div className="piece-row">
+              <PieceGrip
+                active={dragId === row.id}
+                onPointerDown={(event) => beginDrag(row.id, event)}
+                onPointerMove={moveDrag}
+                onPointerUp={stopDrag}
               />
-              <p className="note">
-                {count === undefined ? 'Pièces…' : count === 1 ? '1 pièce' : `${count} pièces`}
-              </p>
-              <div className="row-actions">
-                <button className="ghost-ink" type="button" onClick={() => move(index, -1)} disabled={index === 0}>
-                  Monter
-                </button>
-                <button
-                  className="ghost-ink"
-                  type="button"
-                  onClick={() => move(index, 1)}
-                  disabled={index === rows.length - 1}
-                >
-                  Descendre
-                </button>
-                {pendingDelete === row.id ? (
-                  <>
-                    <button className="piece-remove is-sure" type="button" onClick={() => void remove(row.id)}>
-                      Supprimer
-                    </button>
-                    <button className="piece-remove" type="button" onClick={() => setPendingDelete(null)}>
-                      Annuler
-                    </button>
-                  </>
-                ) : (
-                  <button className="piece-remove" type="button" onClick={() => setPendingDelete(row.id)}>
+              <button className="piece-open" type="button" onClick={() => setOpenId(open ? null : row.id)}>
+                <img src={row.photo || defaultCategoryPhoto} alt="" />
+                <span>
+                  <strong>{row.name || 'Sans nom'}</strong>
+                  <small>{countLabel}</small>
+                </span>
+              </button>
+              {pendingDelete === row.id ? (
+                <span className="piece-confirm">
+                  <button className="piece-remove is-sure" type="button" onClick={() => void remove(row.id)}>
                     Supprimer
                   </button>
-                )}
-              </div>
+                  <button className="piece-remove" type="button" onClick={() => setPendingDelete(null)}>
+                    Annuler
+                  </button>
+                </span>
+              ) : (
+                <button className="piece-remove" type="button" onClick={() => setPendingDelete(row.id)}>
+                  Supprimer
+                </button>
+              )}
             </div>
-          </article>
+            {open && (
+              <article className="piece-edit is-plain">
+                <div className="fields">
+                  <label>
+                    Nom
+                    <input value={row.name} onChange={(event) => update(row.id, { name: event.target.value })} />
+                  </label>
+                  <label>
+                    Description
+                    <textarea value={row.blurb} onChange={(event) => update(row.id, { blurb: event.target.value })} />
+                  </label>
+                  <CategoryPhoto
+                    photo={row.photo}
+                    onPick={(photo) => update(row.id, { photo })}
+                    onError={() => setError('Cette image n’a pas pu être lue.')}
+                  />
+                </div>
+              </article>
+            )}
+          </div>
         )
       })}
     </div>
