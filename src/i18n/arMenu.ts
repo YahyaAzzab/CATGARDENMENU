@@ -43,15 +43,23 @@ export const arCopy: Record<string, ArCopy> = {
 
   'brunch-siamois': {
     name: 'Le Siamois',
-    description: 'كرواسون بالشوكولاتة أو بان سويس',
+    description: 'كرواسون بالشوكولاتة',
   },
   'brunch-chatmelette': {
     name: "Chat'Melette",
     description: 'بيض مقلي أو أومليت حسب الاختيار، خبز كامل، زيت زيتون',
   },
   'brunch-meowrocain': {
-    name: 'Meowrocain',
+    name: 'Le Moustache Meowrocain',
     description: 'طاجين بالخلية، حرشة، ملوي، جبن طري، زيت زيتون، عسل صافي، خبز كامل',
+  },
+  'brunch-le-meowrocain': {
+    name: 'Le Meowrocain',
+    description: 'حرشة، ملوي أو ملوي أكريش، بغريرة، جبن طري، زيت زيتون، عسل صافي',
+  },
+  'brunch-moustache-beldi': {
+    name: 'Le Moustache Beldi',
+    description: 'طاجين بالخليع، خبز كامل، زيتون',
   },
   'brunch-mato-viennois': {
     name: 'Mato Viennois',
@@ -83,10 +91,10 @@ export const arCopy: Record<string, ArCopy> = {
   'carte-mlaoui': { name: 'ملوي', description: 'كريب مغربي مورق' },
   'carte-raib': { name: 'رايب', description: 'لبن مخمر تقليدي' },
   'carte-jben': { name: 'جبن', description: 'جبن طري منزلي' },
-  'carte-pain-chocolat': { name: 'بان بالشوكولاتة', description: 'فيينوازري بالشوكولاتة' },
-  'carte-pain-suisse': { name: 'بان سويس', description: 'فيينوازري بكريمة الحلواني وحبيبات الشوكولاتة' },
-  'carte-mini-schneck': { name: 'ميني شنيك بالزبيب', description: 'فيينوازري صغيرة ملفوفة بالزبيب' },
-  'carte-sfenj-nutella': { name: 'سفنجة بنوتيلا', description: 'سفنجة مغربية محشوة بنوتيلا' },
+  'carte-pain-chocolat': { name: 'بان بالشوكولاتة', description: 'فيينوازري بالشوكولاتة', servingNote: 'حتى الساعة 14' },
+  'carte-pain-suisse': { name: 'بان سويس', description: 'فيينوازري بكريمة الحلواني وحبيبات الشوكولاتة', servingNote: 'حتى الساعة 14' },
+  'carte-mini-schneck': { name: 'ميني شنيك بالزبيب', description: 'فيينوازري صغيرة ملفوفة بالزبيب', servingNote: 'حتى الساعة 14' },
+  'carte-sfenj-nutella': { name: 'سفنجة بنوتيلا', description: 'سفنجة مغربية محشوة بنوتيلا', servingNote: 'حتى الساعة 14' },
   'carte-huile-olive': { name: 'زيت زيتون نور فاس', description: 'زيت زيتون محلي من فاس' },
   'carte-miel': { name: 'عسل صافي', description: 'عسل صافي' },
 
@@ -178,9 +186,10 @@ export const arCopy: Record<string, ArCopy> = {
 
   'cocktail-mojito-classique': { name: 'موهيتو كلاسيكي', description: 'نعناع، ليمون أخضر، سكر القصب، ماء غازي' },
   'cocktail-mojito-blue-lagoon': { name: 'موهيتو بلو لاغون', description: 'موهيتو بالكوراساو الأزرق' },
+  'cocktail-mojito-fruits-rouges': { name: 'موهيتو الفواكه الحمراء', description: 'نعناع، ليمون أخضر، فواكه حمراء، ماء غازي' },
   'cocktail-pina-colada': { name: 'بينا كولادا', description: 'أناناس، جوز الهند، كريمة' },
   'cocktail-blue-sky': { name: 'Blue Sky', description: 'كوكتيل أزرق منعش بالحمضيات' },
-  'cocktail-sweet-mango': { name: 'مانجو حلوة', description: 'كوكتيل خفيف بنكهة المانجو' },
+  'cocktail-sweet-mango': { name: 'Sweet manguo', description: 'كوكتيل خفيف بنكهة المانجو' },
   'cocktail-cats-garden': { name: "Le Cat's Garden", description: 'كوكتيل سيغنيتشر الدار' },
 
   'soda-soda': { name: 'صودا', description: 'صودا حسب الاختيار' },
@@ -240,7 +249,7 @@ export const arCopy: Record<string, ArCopy> = {
   'dessert-croissant-four': { name: 'كرواسون الفرن نوتيلا وكراميل', description: 'كرواسون محمص في الفرن بنوتيلا وكراميل' },
   'dessert-healthy-bowl': { name: 'Healthy Bowl', description: 'وعاء ياغورت وفواكه طرية' },
   'dessert-salade-fruits': { name: 'سلطة الفواكه', description: 'تشكيلة فواكه الموسم الطرية' },
-  'dessert-pain-chocolat': { name: 'بان بالشوكولاتة', description: 'فيينوازري بالشوكولاتة' },
-  'dessert-mini-pain-raisins': { name: 'ميني بان بالزبيب', description: 'فيينوازري صغيرة بالزبيب' },
-  'dessert-mini-pain-suisse': { name: 'ميني بان سويس', description: 'فيينوازري سويسرية صغيرة' },
+  'dessert-pain-chocolat': { name: 'بان بالشوكولاتة', description: 'فيينوازري بالشوكولاتة', servingNote: 'حتى الساعة 14' },
+  'dessert-mini-pain-raisins': { name: 'ميني بان بالزبيب', description: 'فيينوازري صغيرة بالزبيب', servingNote: 'حتى الساعة 14' },
+  'dessert-mini-pain-suisse': { name: 'ميني بان سويس', description: 'فيينوازري سويسرية صغيرة', servingNote: 'حتى الساعة 14' },
 };

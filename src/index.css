@@ -169,6 +169,13 @@ input, textarea, select {
   color: var(--color-rose-dark);
 }
 
+.badge-hours {
+  background-color: var(--color-peach-light);
+  color: var(--color-peach-dark);
+  text-transform: none;
+  letter-spacing: 0.01em;
+}
+
 /* ─── Tag Chip ────────────────────────────────────────────────── */
 .chip {
   display: inline-flex;

@@ -39,6 +39,7 @@ export function MenuItemCard({ item, onTap, compact = false }: MenuItemCardProps
   const name = localized(item, 'name');
   const description = localized(item, 'description');
   const priceNote = localized(item, 'priceNote');
+  const servingNote = localized(item, 'servingNote');
   const category = getCategoryById(item.categoryId);
   const loadedImage = useItemImage(item.id, nearView && !item.image);
   const image = item.image ?? loadedImage;
@@ -115,11 +116,12 @@ export function MenuItemCard({ item, onTap, compact = false }: MenuItemCardProps
               </div>
             </div>
           </div>
-          {item.badges.length > 0 && (
-            <div className="px-2.5 pb-2.5">
+          {(item.badges.length > 0 || servingNote) && (
+            <div className="flex flex-wrap gap-1 px-2.5 pb-2.5">
               {item.badges.slice(0, 1).map((badge) => (
                 <Badge key={badge} badge={badge} />
               ))}
+              {servingNote && <span className="badge badge-hours">{servingNote}</span>}
             </div>
           )}
         </div>
@@ -157,11 +159,12 @@ export function MenuItemCard({ item, onTap, compact = false }: MenuItemCardProps
                 </div>
               </div>
 
-              {item.badges.length > 0 && (
+              {(item.badges.length > 0 || servingNote) && (
                 <div className="mt-1 flex flex-wrap gap-1">
                   {item.badges.map((badge) => (
                     <Badge key={badge} badge={badge} />
                   ))}
+                  {servingNote && <span className="badge badge-hours">{servingNote}</span>}
                 </div>
               )}
 
