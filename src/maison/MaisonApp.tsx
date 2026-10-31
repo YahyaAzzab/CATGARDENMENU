@@ -524,8 +524,13 @@ function PopularRail({
   const scroller = useRef<HTMLDivElement>(null)
   const paused = useRef(false)
   const hovering = useRef(false)
-  const drag = useRef({ x: 0, y: 0, left: 0, moved: false, active: false })
+  const offset = useRef(0)
+  const half = useRef(0)
+  const drag = useRef({ x: 0, start: 0, moved: false, active: false })
   const resume = useRef(0)
+  const fineHover = useRef(
+    typeof window !== 'undefined' && window.matchMedia('(hover: hover) and (pointer: fine)').matches,
+  )
 
   const hold = () => {
     paused.current = true
@@ -541,24 +546,28 @@ function PopularRail({
   }
 
   useEffect(() => {
-    const el = scroller.current
-    if (!el || reduce) return
+    const root = scroller.current
+    const track = root?.querySelector('.rail-track')
+    if (!root || !(track instanceof HTMLElement) || reduce) return
     let frame = 0
     let last = performance.now()
     const tick = (now: number) => {
       const dt = Math.min(now - last, 34)
       last = now
-      const half = el.scrollWidth / 2
-      if (!paused.current && half > el.clientWidth + 16) {
-        el.scrollLeft += (half / 40) * (dt / 1000)
-        if (el.scrollLeft >= half) el.scrollLeft -= half
+      const span = track.scrollWidth / 2
+      half.current = span
+      if (!paused.current && span > root.clientWidth + 16) {
+        offset.current += (span / 40) * (dt / 1000)
       }
+      if (span > 0) offset.current = ((offset.current % span) + span) % span
+      track.style.transform = `translate3d(${-offset.current}px, 0, 0)`
       frame = requestAnimationFrame(tick)
     }
     frame = requestAnimationFrame(tick)
     return () => {
       cancelAnimationFrame(frame)
       window.clearTimeout(resume.current)
+      track.style.transform = ''
     }
   }, [reduce, items])
 
@@ -574,42 +583,39 @@ function PopularRail({
         className="rail-window"
         onPointerDown={(event) => {
           if (event.pointerType === 'mouse' && event.button !== 0) return
-          const el = scroller.current
-          drag.current = {
-            x: event.clientX,
-            y: event.clientY,
-            left: el?.scrollLeft ?? 0,
-            moved: false,
-            active: true,
-          }
+          drag.current = { x: event.clientX, start: offset.current, moved: false, active: true }
           hold()
         }}
         onPointerMove={(event) => {
           const start = drag.current
           if (!start.active) return
-          if (Math.abs(event.clientX - start.x) > 8 || Math.abs(event.clientY - start.y) > 8) start.moved = true
-        }}
-        onScroll={() => {
-          const start = drag.current
-          const el = scroller.current
-          if (!start.active || !el) return
-          if (Math.abs(el.scrollLeft - start.left) > 6) start.moved = true
+          const dx = event.clientX - start.x
+          if (Math.abs(dx) > 8) start.moved = true
+          const span = half.current
+          const next = start.start - dx
+          offset.current = span > 0 ? ((next % span) + span) % span : next
         }}
         onPointerUp={release}
         onPointerCancel={release}
-        onPointerEnter={(event) => {
-          if (event.pointerType !== 'mouse') return
+        onPointerEnter={() => {
+          if (!fineHover.current) return
           hovering.current = true
           hold()
         }}
-        onPointerLeave={(event) => {
-          if (event.pointerType !== 'mouse') return
-          hovering.current = false
-          if (!drag.current.active) paused.current = false
+        onPointerLeave={() => {
+          if (fineHover.current) {
+            hovering.current = false
+            if (!drag.current.active) paused.current = false
+            return
+          }
+          release()
         }}
         onWheel={(event) => {
           if (Math.abs(event.deltaX) <= Math.abs(event.deltaY)) return
           hold()
+          const span = half.current
+          const next = offset.current + event.deltaX
+          offset.current = span > 0 ? ((next % span) + span) % span : next
           release()
         }}
         onClickCapture={(event) => {
