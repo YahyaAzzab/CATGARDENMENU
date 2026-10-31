@@ -101,6 +101,7 @@ export const arCopy: Record<string, ArCopy> = {
   'catffee-catspresso': { name: 'Catspresso', description: 'إسبريسو قوي' },
   'catffee-ameworicano': { name: 'Ameowricano', description: 'إسبريسو مخفف بالماء الساخن' },
   'catffee-catpurccino': { name: 'Catpurccino', description: 'كابتشينو كريمي' },
+  'catffee-cafe-creme': { name: 'قهوة كريم', description: 'إسبريسو وحليب ساخن' },
   'catffee-latte-meowcciato': { name: 'Latte Meowcciato', description: 'حليب رغوي مع خيط من الإسبريسو' },
   'catffee-carameowl-latte': { name: 'Carameowl Latte', description: 'إسبريسو وحليب وكراميل' },
   'catffee-meowocchino': { name: 'Meowocchino', description: 'إسبريسو وحليب ونوتيلا' },
