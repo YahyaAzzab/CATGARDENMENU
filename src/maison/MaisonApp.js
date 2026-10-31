@@ -224,10 +224,98 @@ function Collections({ groups, live, reduce, onOpen, }) {
     return (_jsxs("section", { className: "collections", "aria-labelledby": "collections-title", children: [_jsx("header", { className: "block-head vitrine-head", children: _jsx("h2", { id: "collections-title", children: "Collections" }) }), _jsx("div", { className: "tile-grid", children: groups.map(({ category, items }, index) => (_jsxs(motion.button, { type: "button", className: "tile", initial: reduce ? false : { opacity: 0, y: 22 }, animate: live ? { opacity: 1, y: 0 } : { opacity: 0, y: 22 }, transition: { duration: reduce ? 0 : 0.7, ease: settle, delay: reduce ? 0 : index * 0.06 }, onClick: () => onOpen(category.id), "aria-label": `${category.name} — ${items.length === 1 ? '1 pièce' : `${items.length} pièces`}`, children: [_jsx("span", { className: "tile-frame", children: _jsx("img", { src: category.photo || items[0]?.image, alt: "", loading: "lazy" }) }), _jsxs("span", { className: "tile-copy", children: [_jsx("strong", { children: category.name }), _jsx("small", { children: items.length === 1 ? '1 pièce' : `${items.length} pièces` })] }), _jsx(Arrow, { className: "tile-arrow" })] }, category.id))) })] }));
 }
 function PopularRail({ items, live, reduce, onOpen, }) {
-    const [held, setHeld] = useState(false);
+    const scroller = useRef(null);
+    const paused = useRef(false);
+    const hovering = useRef(false);
+    const offset = useRef(0);
+    const half = useRef(0);
+    const drag = useRef({ x: 0, start: 0, moved: false, active: false });
+    const resume = useRef(0);
+    const fineHover = useRef(typeof window !== 'undefined' && window.matchMedia('(hover: hover) and (pointer: fine)').matches);
+    const hold = () => {
+        paused.current = true;
+        window.clearTimeout(resume.current);
+    };
+    const release = () => {
+        drag.current.active = false;
+        window.clearTimeout(resume.current);
+        resume.current = window.setTimeout(() => {
+            if (!hovering.current && !drag.current.active)
+                paused.current = false;
+        }, 520);
+    };
+    useEffect(() => {
+        const root = scroller.current;
+        const track = root?.querySelector('.rail-track');
+        if (!root || !(track instanceof HTMLElement) || reduce)
+            return;
+        let frame = 0;
+        let last = performance.now();
+        const tick = (now) => {
+            const dt = Math.min(now - last, 34);
+            last = now;
+            const span = track.scrollWidth / 2;
+            half.current = span;
+            if (!paused.current && track.scrollWidth > root.clientWidth + 16) {
+                offset.current += 72 * (dt / 1000);
+            }
+            if (span > 0)
+                offset.current = ((offset.current % span) + span) % span;
+            track.style.transform = `translate3d(${-offset.current}px, 0, 0)`;
+            frame = requestAnimationFrame(tick);
+        };
+        frame = requestAnimationFrame(tick);
+        return () => {
+            cancelAnimationFrame(frame);
+            window.clearTimeout(resume.current);
+            track.style.transform = '';
+        };
+    }, [reduce, items]);
     if (items.length === 0)
         return null;
-    return (_jsxs("section", { className: "rail", "aria-labelledby": "rail-title", children: [_jsx("header", { className: "block-head", children: _jsx("h2", { id: "rail-title", children: "Produits populaires" }) }), _jsx("div", { className: held ? 'rail-window is-held' : 'rail-window', onPointerDown: () => setHeld(true), onPointerUp: () => setHeld(false), onPointerCancel: () => setHeld(false), onPointerLeave: () => setHeld(false), children: _jsxs("div", { className: "rail-track", children: [_jsx(RailSet, { items: items, live: live, reduce: reduce, onOpen: onOpen }), _jsx(RailSet, { items: items, live: live, reduce: reduce, onOpen: onOpen, decorative: true })] }) })] }));
+    return (_jsxs("section", { className: "rail", "aria-labelledby": "rail-title", children: [_jsx("header", { className: "block-head", children: _jsx("h2", { id: "rail-title", children: "Produits populaires" }) }), _jsx("div", { ref: scroller, className: "rail-window", onPointerDown: (event) => {
+                if (event.pointerType === 'mouse' && event.button !== 0)
+                    return;
+                drag.current = { x: event.clientX, start: offset.current, moved: false, active: true };
+                hold();
+            }, onPointerMove: (event) => {
+                const start = drag.current;
+                if (!start.active)
+                    return;
+                const dx = event.clientX - start.x;
+                if (Math.abs(dx) > 8)
+                    start.moved = true;
+                const span = half.current;
+                const next = start.start - dx;
+                offset.current = span > 0 ? ((next % span) + span) % span : next;
+            }, onPointerUp: release, onPointerCancel: release, onPointerEnter: () => {
+                if (!fineHover.current)
+                    return;
+                hovering.current = true;
+                hold();
+            }, onPointerLeave: () => {
+                if (fineHover.current) {
+                    hovering.current = false;
+                    if (!drag.current.active)
+                        paused.current = false;
+                    return;
+                }
+                release();
+            }, onWheel: (event) => {
+                if (Math.abs(event.deltaX) <= Math.abs(event.deltaY))
+                    return;
+                hold();
+                const span = half.current;
+                const next = offset.current + event.deltaX;
+                offset.current = span > 0 ? ((next % span) + span) % span : next;
+                release();
+            }, onClickCapture: (event) => {
+                if (!drag.current.moved)
+                    return;
+                event.preventDefault();
+                event.stopPropagation();
+                drag.current.moved = false;
+            }, children: _jsxs("div", { className: "rail-track", children: [_jsx(RailSet, { items: items, live: live, reduce: reduce, onOpen: onOpen }), !reduce && _jsx(RailSet, { items: items, live: live, reduce: reduce, onOpen: onOpen, decorative: true })] }) })] }));
 }
 function RailSet({ items, live, reduce, onOpen, decorative = false, }) {
     return (_jsx("ul", { className: "rail-set", "aria-hidden": decorative ? true : undefined, children: items.map((pastry, index) => (_jsx("li", { children: _jsx(RailCard, { pastry: pastry, live: live, reduce: reduce, delay: index * 0.05, decorative: decorative, onOpen: onOpen }) }, pastry.id))) }));

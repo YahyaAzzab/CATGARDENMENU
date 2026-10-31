@@ -556,8 +556,8 @@ function PopularRail({
       last = now
       const span = track.scrollWidth / 2
       half.current = span
-      if (!paused.current && span > root.clientWidth + 16) {
-        offset.current += (span / 40) * (dt / 1000)
+      if (!paused.current && track.scrollWidth > root.clientWidth + 16) {
+        offset.current += 72 * (dt / 1000)
       }
       if (span > 0) offset.current = ((offset.current % span) + span) % span
       track.style.transform = `translate3d(${-offset.current}px, 0, 0)`

@@ -1,7 +1,7 @@
 import { categoryOf } from './categories';
 import { isMoment } from './moment';
 import { readPieceMeta } from './pieceMeta';
-import { pastries } from './pastries';
+import { pastries, pastryImages } from './pastries';
 const demoById = new Map(pastries.map((item) => [item.id, item]));
 function asMoments(value) {
     if (!Array.isArray(value))
@@ -55,7 +55,7 @@ export function toPastry(row, flags) {
     if (!row.name?.trim())
         return null;
     const demo = demoById.get(row.id);
-    const image = row.image_url?.trim() || demo?.image || '/maison/plate.svg';
+    const image = row.image_url?.trim() || pastryImages[row.id] || demo?.image || '/maison/plate.svg';
     return {
         id: row.id,
         name: row.name.trim(),

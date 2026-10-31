@@ -1,7 +1,7 @@
 import { categoryOf } from './categories'
 import { isMoment, type MomentId } from './moment'
 import { readPieceMeta } from './pieceMeta'
-import { pastries, type Pastry } from './pastries'
+import { pastries, pastryImages, type Pastry } from './pastries'
 import type { PieceRecord } from './piecesDb'
 
 const demoById = new Map(pastries.map((item) => [item.id, item]))
@@ -76,7 +76,7 @@ function applyMeta(item: Pastry): Pastry {
 export function toPastry(row: PieceRecord, flags: PieceFlags): Pastry | null {
   if (!row.name?.trim()) return null
   const demo = demoById.get(row.id)
-  const image = row.image_url?.trim() || demo?.image || '/maison/plate.svg'
+  const image = row.image_url?.trim() || pastryImages[row.id] || demo?.image || '/maison/plate.svg'
   return {
     id: row.id,
     name: row.name.trim(),

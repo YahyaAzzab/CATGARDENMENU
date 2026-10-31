@@ -3,6 +3,7 @@ import sanSebastianChocolat from '../assets/items/dessert-san-sebastian-chocolat
 import sanSebastianPistache from '../assets/items/dessert-san-sebastian-pistache.jpg'
 import tiramisu from '../assets/items/dessert-tiramisu.jpg'
 import brookie from '../assets/items/dessert-brookie.jpg'
+import cookiePie from '../assets/items/dessert-cookies-pie.jpg'
 import brownie from '../assets/items/dessert-brownie.jpg'
 import chocolatGlace from '../assets/items/dessert-chocolat-glace.jpg'
 import type { CategoryId } from './categories'
@@ -43,7 +44,8 @@ export const pastryImages: Record<string, string> = {
   tiramisu,
   brookie,
   brownie,
-  'cookie-pie': brookie,
+  'cookie-pie': cookiePie,
+  'tarte-cookies': cookiePie,
   'san-sebastian-pistache': sanSebastianPistache,
   'dome-chocolat': '/maison/pieces/dome-chocolat.jpg',
   'coeur-coulant': '/maison/pieces/coeur-coulant.jpg',
