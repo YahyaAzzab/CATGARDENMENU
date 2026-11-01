@@ -147,7 +147,7 @@ const brunchHotDrinkChoice = {
     labelAr: 'مشروب ساخن من اختيارك',
     options: [
         { nameFr: 'Café', nameEn: 'Coffee', nameAr: 'قهوة' },
-        { nameFr: 'Latte Meowcciato', nameEn: 'Latte Meowcciato', nameAr: 'Latte Meowcciato' },
+        { nameFr: 'Café crème', nameEn: 'Café crème', nameAr: 'قهوة كريم' },
         { nameFr: 'Thé', nameEn: 'Tea', nameAr: 'شاي' },
         { nameFr: 'Verveine', nameEn: 'Verbena', nameAr: 'لويزة' },
         { nameFr: 'Chocolat chaud', nameEn: 'Hot chocolate', nameAr: 'شوكولاتة ساخنة' },
