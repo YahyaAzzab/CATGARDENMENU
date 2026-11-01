@@ -157,7 +157,7 @@ export const arCopy: Record<string, ArCopy> = {
   'pancake-cats-garden': { name: 'Pancake Cats Garden', description: 'بان كيك طري بالعسل الصافي والفواكه الجافة المقرمشة' },
   'pancake-amande-praline': { name: 'بان كيك لوز وبرالين', description: 'بان كيك طري باللوز المفروم وبرالين اللوز' },
   'pancake-pecan-praline': { name: 'بان كيك بيكان وبرالين', description: 'بان كيك طري بقطع جوز البيكان' },
-  'pancake-fruits-rouges-coulis': { name: 'بان كيك الفواكه الحمراء', description: 'بان كيك طري بصلصة الكولي والفواكه الحمراء' },
+  'pancake-fruits-rouges-coulis': { name: 'بان كيك الفواكه الحمراء', description: 'بان كيك طري بصلصة الكولي وحبة توت في الوسط' },
 
   'crepe-nutella': { name: 'كريب نوتيلا', description: 'كريب رقيق مغطى بنوتيلا' },
   'crepe-nutella-banane': { name: 'كريب نوتيلا وموز', description: 'كريب، نوتيلا وشرائح الموز' },
@@ -166,7 +166,7 @@ export const arCopy: Record<string, ArCopy> = {
   'crepe-nutella-pistache': { name: 'كريب نوتيلا وفستق', description: 'كريب، نوتيلا وكريمة الفستق' },
   'crepe-amande-praline': { name: 'كريب لوز وبرالين', description: 'كريب بكريمة برالين اللوز' },
   'crepe-pecan-praline': { name: 'كريب بيكان وبرالين', description: 'كريب بالبرالين وقطع جوز البيكان' },
-  'crepe-fruits-rouges-coulis': { name: 'كريب الفواكه الحمراء', description: 'كريب بصلصة الكولي والفواكه الحمراء' },
+  'crepe-fruits-rouges-coulis': { name: 'كريب الفواكه الحمراء', description: 'كريب بصلصة الكولي وحبة توت في الوسط' },
   'crepe-kunafa-dubai': { name: 'كريب كنافة دبي', description: 'كنافة، فستق ونوتيلا' },
   'crepe-fruits-saison': { name: 'كريب نوتيلا أو كراميل بفواكه الموسم', description: 'كريب بنوتيلا أو الكراميل وفواكه الموسم الطرية' },
 
@@ -176,7 +176,7 @@ export const arCopy: Record<string, ArCopy> = {
   'gaufre-pistache': { name: 'غوفر بالفستق', description: 'غوفر بكريمة الفستق' },
   'gaufre-amande-praline': { name: 'غوفر لوز وبرالين', description: 'غوفر باللوز وبرالين اللوز' },
   'gaufre-pecan-praline': { name: 'غوفر بيكان وبرالين', description: 'غوفر بالبرالين وقطع جوز البيكان' },
-  'gaufre-fruits-rouges-coulis': { name: 'غوفر الفواكه الحمراء', description: 'غوفر بصلصة الكولي والفواكه الحمراء' },
+  'gaufre-fruits-rouges-coulis': { name: 'غوفر الفواكه الحمراء', description: 'غوفر بصلصة الكولي وحبة توت في الوسط' },
   'gaufre-fruits-nutella': {
     name: 'غوفر فواكه ونوتيلا',
     description: 'غوفر بالفواكه الطرية ونوتيلا',
