@@ -77,9 +77,9 @@ function MenuApp({
   };
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-cream">
+    <div className="relative min-h-screen overflow-x-hidden">
       <div className="paw-watermark">
-        <PawPrint size={120} className="text-chocolate" />
+        <PawPrint size={120} className="text-peach-dark" />
       </div>
 
       <Header onLogoClick={goHome} showMark={showMark} />
