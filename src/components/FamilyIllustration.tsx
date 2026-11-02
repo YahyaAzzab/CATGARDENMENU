@@ -42,21 +42,30 @@ export function FamilyIllustration({
   const conf = art[familyId];
   const eager = priority || variant === 'header';
   const isHeader = variant === 'header';
+  const background = isHeader
+    ? `bg-gradient-to-r ${conf.bg}`
+    : familyId === 'breakfast' || familyId === 'sweet' || familyId === 'savory'
+      ? 'bg-cream'
+      : `bg-gradient-to-br ${conf.bg}`;
   /* Les visuels produits sont cadrés plein carré : les rogner coupait la pièce
      en deux. On les affiche donc entiers, dans un fond de la même couleur que
      leur propre fond, pour qu’ils se fondent dans la carte. */
   const frame = isHeader
     ? 'absolute inset-y-0 right-0 h-full aspect-square object-contain [mask-image:linear-gradient(to_right,transparent,black_24%)]'
-    : 'absolute inset-y-0 right-0 h-full w-[58%] bg-cream object-contain p-[3px]';
+    : familyId === 'breakfast'
+      ? 'absolute right-0 top-[-22%] h-[144%] aspect-square bg-cream object-contain p-[3px]'
+      : familyId === 'savory' || familyId === 'sweet'
+        ? 'absolute inset-y-0 right-0 h-full w-[60%] bg-cream object-contain p-[3px]'
+        : 'absolute right-0 top-[-5%] h-[110%] w-[60%] scale-110 origin-right bg-cream object-contain p-[3px]';
   /* Voile qui prolonge le fond des illustrations vers la gauche, pour que le
      bord de l’image ne se voie pas et que le texte reste sur du clair. */
-  const wash = isHeader
+  const wash = isHeader || familyId === 'breakfast' || familyId === 'sweet' || familyId === 'savory'
     ? null
-    : 'bg-gradient-to-r from-[#FDF6EC] from-[6%] via-[#FDF6EC] via-[44%] to-transparent to-[62%]';
+    : 'bg-gradient-to-r from-[#FDF6EC] from-[6%] via-[#FDF6EC] via-[46%] to-transparent to-[52%]';
 
   return (
     <div
-      className={`family-visual absolute inset-0 ${isHeader ? 'bg-gradient-to-r' : 'bg-gradient-to-br'} ${conf.bg} ${className}`}
+      className={`family-visual absolute inset-0 ${background} ${className}`}
       aria-hidden="true"
     >
       {isHeader && (
