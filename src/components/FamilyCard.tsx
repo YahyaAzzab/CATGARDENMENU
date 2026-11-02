@@ -32,7 +32,7 @@ export function FamilyCard({
   const title = localized(family, 'name');
 
   const minH = featured
-    ? 'min-h-[108px]'
+    ? 'min-h-[124px]'
     : size === 'lg'
       ? 'min-h-[156px]'
       : size === 'sm'

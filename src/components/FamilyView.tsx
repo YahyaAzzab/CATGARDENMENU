@@ -117,7 +117,6 @@ export function FamilyView({
           transition={reduce ? { duration: 0 } : { duration: 0.5, ease: pageEase }}
         >
           <FamilyIllustration familyId={familyId} variant="header" />
-          <div className="absolute inset-0 bg-gradient-to-t from-chocolate/35 via-transparent to-chocolate/10" />
         </motion.div>
 
         <div className="absolute inset-x-0 top-0 flex h-[148px] flex-col justify-between p-4">
@@ -134,7 +133,7 @@ export function FamilyView({
           </button>
           <div>
             <h2
-              className="text-[1.35rem] font-bold leading-tight text-white drop-shadow-sm"
+              className="text-[1.35rem] font-bold leading-tight text-chocolate"
               style={{ fontFamily: 'var(--font-display)' }}
             >
               {name}

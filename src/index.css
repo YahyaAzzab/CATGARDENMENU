@@ -375,9 +375,9 @@ input, textarea, select {
 
 /* ─── Desktop / Tablet Layout ─────────────────────────────────── */
 body {
-  background-color: #F8E3CE;
+  background-color: #EDF2E6;
   background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260' viewBox='0 0 260 260'%3E%3Cg fill='%23C56B32' fill-opacity='0.34'%3E%3Cellipse cx='48' cy='78' rx='16' ry='13'/%3E%3Cellipse cx='28' cy='52' rx='7' ry='10' transform='rotate(-24 28 52)'/%3E%3Cellipse cx='42' cy='42' rx='7' ry='10'/%3E%3Cellipse cx='58' cy='44' rx='7' ry='10' transform='rotate(16 58 44)'/%3E%3Cellipse cx='70' cy='58' rx='6' ry='9' transform='rotate(28 70 58)'/%3E%3C/g%3E%3Cg fill='%23E29A62' fill-opacity='0.4'%3E%3Cellipse cx='176' cy='168' rx='14' ry='11'/%3E%3Cellipse cx='158' cy='146' rx='6' ry='9' transform='rotate(-22 158 146)'/%3E%3Cellipse cx='171' cy='136' rx='6' ry='9'/%3E%3Cellipse cx='185' cy='138' rx='6' ry='9' transform='rotate(14 185 138)'/%3E%3Cellipse cx='196' cy='150' rx='5.5' ry='8' transform='rotate(26 196 150)'/%3E%3C/g%3E%3Cpath fill='%23E08B86' fill-opacity='0.38' d='M124 214c-8 0-13 5-13 11 0 10 13 18 13 18s13-8 13-18c0-6-5-11-13-11z'/%3E%3C/svg%3E");
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260' viewBox='0 0 260 260'%3E%3Cg fill='%236B8E6B' fill-opacity='0.22'%3E%3Cellipse cx='48' cy='78' rx='16' ry='13'/%3E%3Cellipse cx='28' cy='52' rx='7' ry='10' transform='rotate(-24 28 52)'/%3E%3Cellipse cx='42' cy='42' rx='7' ry='10'/%3E%3Cellipse cx='58' cy='44' rx='7' ry='10' transform='rotate(16 58 44)'/%3E%3Cellipse cx='70' cy='58' rx='6' ry='9' transform='rotate(28 70 58)'/%3E%3C/g%3E%3Cg fill='%238BA888' fill-opacity='0.3'%3E%3Cellipse cx='176' cy='168' rx='14' ry='11'/%3E%3Cellipse cx='158' cy='146' rx='6' ry='9' transform='rotate(-22 158 146)'/%3E%3Cellipse cx='171' cy='136' rx='6' ry='9'/%3E%3Cellipse cx='185' cy='138' rx='6' ry='9' transform='rotate(14 185 138)'/%3E%3Cellipse cx='196' cy='150' rx='5.5' ry='8' transform='rotate(26 196 150)'/%3E%3C/g%3E%3Cpath fill='%23A9C4A0' fill-opacity='0.34' d='M124 214c-8 0-13 5-13 11 0 10 13 18 13 18s13-8 13-18c0-6-5-11-13-11z'/%3E%3C/svg%3E");
   background-attachment: fixed;
 }
 
@@ -392,7 +392,7 @@ body {
     max-width: 480px;
     margin: 0 auto;
     background: color-mix(in srgb, var(--color-cream) 82%, transparent);
-    box-shadow: 0 0 48px rgba(196, 122, 69, 0.16);
+    box-shadow: 0 0 48px rgba(107, 142, 107, 0.18);
   }
 }
 

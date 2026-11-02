@@ -23,7 +23,7 @@ const art: Record<FamilyId, { bg: string; image: string }> = {
     image: sweet,
   },
   savory: {
-    bg: 'from-peach-muted/80 via-[#EED4B8] to-cream-dark',
+    bg: 'from-peach-muted/80 via-[#EED4B8] to-cream',
     image: savory,
   },
 };
@@ -41,20 +41,27 @@ export function FamilyIllustration({
 }) {
   const conf = art[familyId];
   const eager = priority || variant === 'header';
-  const frame =
-    variant === 'header'
-      ? 'absolute inset-0 h-full w-full object-cover object-right'
-      : 'absolute inset-y-0 right-0 h-full w-[58%] object-cover object-right';
-  const wash =
-    variant === 'header'
-      ? 'bg-gradient-to-r from-[#FDF6EC] from-[4%] via-[#FDF6EC]/85 via-[30%] to-transparent to-[52%]'
-      : 'bg-gradient-to-r from-[#FDF6EC] from-[6%] via-[#FDF6EC] via-[44%] to-transparent to-[62%]';
+  const isHeader = variant === 'header';
+  /* Les visuels produits sont cadrés plein carré : les rogner coupait la pièce
+     en deux. On les affiche donc entiers, dans un fond de la même couleur que
+     leur propre fond, pour qu’ils se fondent dans la carte. */
+  const frame = isHeader
+    ? 'absolute inset-y-0 right-0 h-full aspect-square object-contain [mask-image:linear-gradient(to_right,transparent,black_24%)]'
+    : 'absolute inset-y-0 right-0 h-full w-[58%] bg-cream object-contain p-[3px]';
+  /* Voile qui prolonge le fond des illustrations vers la gauche, pour que le
+     bord de l’image ne se voie pas et que le texte reste sur du clair. */
+  const wash = isHeader
+    ? null
+    : 'bg-gradient-to-r from-[#FDF6EC] from-[6%] via-[#FDF6EC] via-[44%] to-transparent to-[62%]';
 
   return (
     <div
-      className={`family-visual absolute inset-0 bg-gradient-to-br ${conf.bg} ${className}`}
+      className={`family-visual absolute inset-0 ${isHeader ? 'bg-gradient-to-r' : 'bg-gradient-to-br'} ${conf.bg} ${className}`}
       aria-hidden="true"
     >
+      {isHeader && (
+        <div className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-cream from-[26%] via-cream/70 to-transparent" />
+      )}
       <img
         src={conf.image}
         alt=""
@@ -63,7 +70,7 @@ export function FamilyIllustration({
         loading={eager ? 'eager' : 'lazy'}
         className={frame}
       />
-      <div className={`absolute inset-0 ${wash}`} />
+      {wash && <div className={`absolute inset-0 ${wash}`} />}
     </div>
   );
 }
