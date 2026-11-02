@@ -53,7 +53,7 @@ export function FamilyIllustration({
   const frame = isHeader
     ? 'absolute inset-y-0 right-0 h-full aspect-square object-contain [mask-image:linear-gradient(to_right,transparent,black_24%)]'
     : familyId === 'breakfast'
-      ? 'absolute right-0 top-[-22%] h-[144%] aspect-square bg-cream object-contain p-[3px]'
+      ? 'absolute right-0 top-[-30%] h-[160%] aspect-square bg-cream object-contain p-[3px]'
       : familyId === 'savory' || familyId === 'sweet'
         ? 'absolute inset-y-0 right-0 h-full w-[60%] bg-cream object-contain p-[3px]'
         : 'absolute right-0 top-[-5%] h-[110%] w-[60%] scale-110 origin-right bg-cream object-contain p-[3px]';
