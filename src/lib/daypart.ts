@@ -1,11 +1,12 @@
-import { getItemById } from '../data/menu';
+import { getItemById, menuItems } from '../data/menu';
 import type { MenuItem } from '../data/types';
+import { getMoroccoMinutes } from './moroccoTime';
 
 export type Daypart = 'breakfast' | 'lunch' | 'gouter' | 'dinner' | 'late';
 
-/** Local café hours: breakfast, lunch, goûter, dinner, then a late menu. */
+/** Morocco café hours: breakfast, lunch, goûter, dinner, then a late menu. */
 export function getDaypart(now = new Date()): Daypart {
-  const minutes = now.getHours() * 60 + now.getMinutes();
+  const minutes = getMoroccoMinutes(now);
   if (minutes >= 5 * 60 && minutes < 11 * 60 + 30) return 'breakfast';
   if (minutes >= 11 * 60 + 30 && minutes < 15 * 60 + 30) return 'lunch';
   if (minutes >= 15 * 60 + 30 && minutes < 18 * 60 + 30) return 'gouter';
@@ -74,8 +75,46 @@ const SPOTLIGHT: Record<Daypart, string[]> = {
   ],
 };
 
+const CATEGORY_DAYPART: Record<string, Daypart> = {
+  brunch: 'breakfast',
+  'a-la-carte': 'breakfast',
+  catffee: 'breakfast',
+  chocomeow: 'late',
+  miauthe: 'breakfast',
+  infusions: 'late',
+  'meow-gelato': 'gouter',
+  'jus-smoothies': 'lunch',
+  pancakes: 'gouter',
+  'crepes-sucrees': 'gouter',
+  gaufres: 'gouter',
+  milkshake: 'gouter',
+  cocktails: 'dinner',
+  'sodas-eaux': 'lunch',
+  'a-partager': 'dinner',
+  pizzas: 'dinner',
+  burgers: 'dinner',
+  'crepes-salees': 'dinner',
+  'gateaux-desserts': 'gouter',
+};
+
+const CURATED_ITEM_IDS = new Set(Object.values(SPOTLIGHT).flat());
+
 export function getSpotlightItems(now = new Date()): MenuItem[] {
-  return SPOTLIGHT[getDaypart(now)]
-    .map((id) => getItemById(id))
-    .filter((item): item is MenuItem => Boolean(item && item.available));
+  const daypart = getDaypart(now);
+  const scheduledItems = menuItems.filter((item) => {
+    if (CURATED_ITEM_IDS.has(item.id)) return false;
+
+    const assignedDaypart = CATEGORY_DAYPART[item.categoryId];
+    if (!assignedDaypart) {
+      throw new Error(
+        `No homepage spotlight time configured for menu item "${item.id}" in category "${item.categoryId}".`
+      );
+    }
+
+    return assignedDaypart === daypart;
+  });
+
+  return [...SPOTLIGHT[daypart].map(getItemById), ...scheduledItems].filter(
+    (item): item is MenuItem => Boolean(item && item.available)
+  );
 }

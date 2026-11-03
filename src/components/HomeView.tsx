@@ -43,11 +43,11 @@ export function HomeView({
 }: HomeViewProps) {
   const { t } = useI18n();
   const reduce = useReducedMotion();
-  const brunchTime = isBrunchHours();
+  const [now, setNow] = useState(() => new Date());
+  const brunchTime = isBrunchHours(now);
   const ordered = getOrderedFamilies(brunchTime);
   const firstReveal = fromSplash && !homeSeen;
   const headerDelay = firstReveal ? ordered.length * cascadeStagger + 0.08 : 0.05;
-  const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
     homeSeen = true;

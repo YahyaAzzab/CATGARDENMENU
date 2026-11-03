@@ -1,5 +1,6 @@
 import { categories, menuItems } from './menu';
 import type { Category, MenuItem } from './types';
+import { getMoroccoMinutes } from '../lib/moroccoTime';
 
 export type FamilyId = 'breakfast' | 'hot-drinks' | 'cold-drinks' | 'sweet' | 'savory';
 
@@ -84,7 +85,7 @@ export function getFamilyById(id: string | null | undefined): Family | undefined
 }
 
 export function isBrunchHours(now = new Date()): boolean {
-  return now.getHours() < 14;
+  return getMoroccoMinutes(now) < 14 * 60;
 }
 
 /** Breakfast first + featured before 14h; otherwise last. */
