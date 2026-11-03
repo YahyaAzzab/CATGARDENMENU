@@ -109,7 +109,7 @@ export const arCopy: Record<string, ArCopy> = {
   'chocomeow-chaud': { name: 'Chocomeow ساخن', description: 'شوكولاتة ساخنة ناعمة' },
   'chocomeow-fondu': { name: 'Chocomeow ذائب', description: 'شوكولاتة ذائبة غنية' },
 
-  'miauthe-marocain': { name: 'أتاي مغربي', description: 'شاي أخضر بالنعناع الطري، على الطريقة المغربية' },
+  'miauthe-marocain': { name: 'أتاي مغربي', description: 'شاي أخضر بالنعناع الطازج أو اللويزة، على الطريقة المغربية' },
   'miauthe-noir': { name: 'شاي أسود', description: 'شاي أسود كلاسيكي' },
   'miauthe-verveine': { name: 'لويزة', description: 'منقوع اللويزة بنكهة الليمون' },
   'miauthe-verveine-lait': { name: 'لويزة بالحليب', description: 'منقوع اللويزة مع الحليب الساخن' },
@@ -169,6 +169,14 @@ export const arCopy: Record<string, ArCopy> = {
   'crepe-fruits-rouges-coulis': { name: 'كريب الفواكه الحمراء', description: 'كريب بصلصة الكولي وحبة توت في الوسط' },
   'crepe-kunafa-dubai': { name: 'كريب كنافة دبي', description: 'كنافة، فستق ونوتيلا' },
   'crepe-fruits-saison': { name: 'كريب نوتيلا أو كراميل بفواكه الموسم', description: 'كريب بنوتيلا أو الكراميل وفواكه الموسم الطرية' },
+  'crepe-tagliatelles-nutella-caramel': {
+    name: 'شرائح كريب بالنوتيلا والكراميل',
+    description: 'شرائح كريب مغطاة بالنوتيلا والكراميل، تُقدَّم مع الكريمة الإنجليزية',
+  },
+  'crepe-tagliatelles-coulis-fruits-rouges': {
+    name: 'شرائح كريب بكولي الفواكه الحمراء',
+    description: 'شرائح كريب مغطاة بكولي الفواكه الحمراء',
+  },
 
   'gaufre-nutella': { name: 'غوفر نوتيلا', description: 'غوفر مقرمش مغطى بنوتيلا' },
   'gaufre-nutella-banane': { name: 'غوفر نوتيلا وموز', description: 'غوفر، نوتيلا وموز طري' },
@@ -217,6 +225,10 @@ export const arCopy: Record<string, ArCopy> = {
   'pizza-quatre-fromages': { name: 'بيتزا الأجبان الأربعة', description: 'موزاريلا، جبن الماعز، غورغونزولا، إمنتال' },
   'pizza-pepperoni': { name: 'بيتزا بيبروني', description: 'بيبروني، موزاريلا، صلصة الطماطم' },
   'pizza-fruits-de-mer': { name: 'بيتزا فواكه البحر', description: 'فواكه البحر، موزاريلا، صلصة الطماطم' },
+  panuozzo: {
+    name: 'بانوتسو',
+    description: 'خبز بانوتسو محشو باللحم والفطر المقلي والجبن والخس والطماطم، يقدم مع سلطة خضراء',
+  },
 
   'burger-catcheese': {
     name: "Cat'Cheese Burger",
@@ -238,6 +250,26 @@ export const arCopy: Record<string, ArCopy> = {
   'crepe-salee-fruits-de-mer': { name: 'كريب فواكه البحر', description: 'كريب محشو بفواكه البحر' },
   'crepe-salee-mixte': { name: 'كريب مشكل', description: 'كريب بحشوة مشكلة' },
 
+  'dessert-cheesecake-chocolat': {
+    name: 'تشيز كيك بالشوكولاتة',
+    description: 'تشيز كيك بالشوكولاتة مزين بفتات الشوكولاتة والبندق',
+  },
+  'dessert-finger-vanille-pecan': {
+    name: 'فينغر بالفانيليا والبيكان',
+    description: 'حلوى فينغر بالشوكولاتة مزينة بكريمة الفانيليا وجوز البيكان',
+  },
+  'dessert-cheesecake-fruits-rouges': {
+    name: 'تشيز كيك بالفواكه الحمراء',
+    description: 'تشيز كيك بالفواكه الحمراء مزين بالتوت الأحمر والأسود والكريمة المخفوقة على قاعدة من البسكويت',
+  },
+  'dessert-fondant-pistache': {
+    name: 'فوندان بالفستق',
+    description: 'فوندان بالفستق مغطى بكريمة الفستق ومزين بالفستق المجروش',
+  },
+  'dessert-fondant-chocolat': {
+    name: 'فوندان بالشوكولاتة',
+    description: 'فوندان بالشوكولاتة مغطى بصلصة الشوكولاتة ومزين برقائق الشوكولاتة',
+  },
   'dessert-brookie': { name: 'بروكي', description: 'نصف براوني ونصف كوكي' },
   'dessert-brownie': { name: 'براوني', description: 'براوني شوكولاتة ذائب' },
   'dessert-chocolat-glace': { name: 'شوكولاتة بالمثلجات', description: 'براوني مع كرة مثلجات' },
