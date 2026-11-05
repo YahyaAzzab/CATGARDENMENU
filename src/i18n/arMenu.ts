@@ -227,7 +227,7 @@ export const arCopy: Record<string, ArCopy> = {
   'pizza-fruits-de-mer': { name: 'بيتزا فواكه البحر', description: 'فواكه البحر، موزاريلا، صلصة الطماطم' },
   panuozzo: {
     name: 'بانوتسو',
-    description: 'خبز بانوتسو محشو باللحم والفطر المقلي والجبن والخس والطماطم، يقدم مع سلطة خضراء',
+    description: 'خبز بانوتسو محشو بالدجاج والفطر المقلي والجبن والخس والطماطم، يقدم مع سلطة خضراء',
   },
 
   'burger-catcheese': {
@@ -277,7 +277,7 @@ export const arCopy: Record<string, ArCopy> = {
   'dessert-tiramisu': { name: 'تيراميسو', description: 'تيراميسو كريمي بالقهوة' },
   'dessert-san-sebastian-chocolat': { name: 'سان سيباستيان بالشوكولاتة', description: 'تشيز كيك باسكي بالشوكولاتة' },
   'dessert-san-sebastian-pistache': { name: 'سان سيباستيان بالفستق', description: 'تشيز كيك باسكي بالفستق' },
-  'dessert-pain-perdu': { name: 'خبز محمص', description: 'خبز محمص ذهبي ومكرمل' },
+  'dessert-pain-perdu': { name: 'خبز محمص', description: 'خبز فرنسي محمص ذهبي، مع كريمة إنجليزية وكراميل بالزبدة المملحة وفاكهة الموسم' },
   'dessert-healthy-bowl': { name: 'Healthy Bowl', description: 'وعاء ياغورت وفواكه طرية' },
   'dessert-salade-fruits': { name: 'سلطة الفواكه', description: 'تشكيلة فواكه الموسم الطرية' },
   'dessert-pain-chocolat': { name: 'بان بالشوكولاتة', description: 'فيينوازري بالشوكولاتة', servingNote: 'حتى الساعة 14' },

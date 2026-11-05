@@ -104,6 +104,14 @@ export function getFamilyItemCount(family: Family): number {
   return getFamilyItems(family).length;
 }
 
+function sortItemsByPriceDescending(items: MenuItem[]): MenuItem[] {
+  return items.sort((a, b) => {
+    if (a.price === null) return b.price === null ? 0 : 1;
+    if (b.price === null) return -1;
+    return b.price - a.price;
+  });
+}
+
 export interface FamilySection {
   category: Category;
   items: MenuItem[];
@@ -113,10 +121,14 @@ export function getFamilySections(family: Family): FamilySection[] {
   if (family.id === 'breakfast') {
     const brunch = categories.find((c) => c.id === 'brunch')!;
     const aLaCarte = categories.find((c) => c.id === 'a-la-carte')!;
-    const brunchItems = menuItems.filter((i) => i.categoryId === 'brunch');
-    const pastryItems = menuItems.filter((i) => VIENNOISERIE_ITEM_IDS.has(i.id));
-    const carteItems = menuItems.filter(
-      (i) => i.categoryId === 'a-la-carte' && !VIENNOISERIE_ITEM_IDS.has(i.id)
+    const brunchItems = sortItemsByPriceDescending(
+      menuItems.filter((i) => i.categoryId === 'brunch')
+    );
+    const pastryItems = sortItemsByPriceDescending(
+      menuItems.filter((i) => VIENNOISERIE_ITEM_IDS.has(i.id))
+    );
+    const carteItems = sortItemsByPriceDescending(
+      menuItems.filter((i) => i.categoryId === 'a-la-carte' && !VIENNOISERIE_ITEM_IDS.has(i.id))
     );
     return [
       { category: brunch, items: brunchItems },
