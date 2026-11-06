@@ -1,19 +1,20 @@
-import { getItemById, menuItems } from '../data/menu';
-import type { MenuItem } from '../data/types';
-import { getMoroccoMinutes } from './moroccoTime';
+import { getItemById } from '../data/menu'
+import type { MenuItem } from '../data/types'
+import { getMoroccoMinutes } from './moroccoTime'
 
-export type Daypart = 'breakfast' | 'lunch' | 'gouter' | 'dinner' | 'late';
+export type Daypart = 'breakfast' | 'lunch' | 'gouter' | 'dinner' | 'late'
 
 /** Morocco café hours: breakfast, lunch, goûter, dinner, then a late menu. */
 export function getDaypart(now = new Date()): Daypart {
-  const minutes = getMoroccoMinutes(now);
-  if (minutes >= 5 * 60 && minutes < 11 * 60 + 30) return 'breakfast';
-  if (minutes >= 11 * 60 + 30 && minutes < 15 * 60 + 30) return 'lunch';
-  if (minutes >= 15 * 60 + 30 && minutes < 18 * 60 + 30) return 'gouter';
-  if (minutes >= 18 * 60 + 30 && minutes < 23 * 60) return 'dinner';
-  return 'late';
+  const minutes = getMoroccoMinutes(now)
+  if (minutes >= 5 * 60 && minutes < 11 * 60 + 30) return 'breakfast'
+  if (minutes >= 11 * 60 + 30 && minutes < 15 * 60 + 30) return 'lunch'
+  if (minutes >= 15 * 60 + 30 && minutes < 18 * 60 + 30) return 'gouter'
+  if (minutes >= 18 * 60 + 30 && minutes < 23 * 60) return 'dinner'
+  return 'late'
 }
 
+/** Short curated rail for the homepage — about a dozen pieces, not the whole category. */
 const SPOTLIGHT: Record<Daypart, string[]> = {
   breakfast: [
     'brunch-meowrocain',
@@ -31,6 +32,7 @@ const SPOTLIGHT: Record<Daypart, string[]> = {
     'pizza-quatre-fromages',
     'pizza-margherita',
     'pizza-poulet-champignons',
+    'panuozzo',
     'burger-catcheese',
     'burger-cats-mix',
     'burger-crispy-chicken',
@@ -45,15 +47,18 @@ const SPOTLIGHT: Record<Daypart, string[]> = {
     'pancake-nutella-banane',
     'crepe-kunafa-dubai',
     'crepe-pistache',
+    'crepe-tagliatelles-nutella-caramel',
     'gaufre-pistache',
     'gelato-3-boules',
     'dessert-san-sebastian-pistache',
+    'dessert-cheesecake-chocolat',
     'dessert-chocolat-glace',
     'smoothie-fruits-rouges',
   ],
   dinner: [
     'pizza-quatre-fromages',
     'pizza-fruits-de-mer',
+    'panuozzo',
     'burger-cats-mix',
     'burger-crispy-chicken',
     'crepe-salee-fruits-de-mer',
@@ -69,52 +74,15 @@ const SPOTLIGHT: Record<Daypart, string[]> = {
     'dessert-tiramisu',
     'dessert-cookies-pie',
     'dessert-brownie',
+    'dessert-cheesecake-fruits-rouges',
     'gelato-3-boules',
     'miauthe-verveine',
     'cocktail-cats-garden',
   ],
-};
-
-const CATEGORY_DAYPART: Record<string, Daypart> = {
-  brunch: 'breakfast',
-  'a-la-carte': 'breakfast',
-  catffee: 'breakfast',
-  chocomeow: 'late',
-  miauthe: 'breakfast',
-  infusions: 'late',
-  'meow-gelato': 'gouter',
-  'jus-smoothies': 'lunch',
-  pancakes: 'gouter',
-  'crepes-sucrees': 'gouter',
-  gaufres: 'gouter',
-  milkshake: 'gouter',
-  cocktails: 'dinner',
-  'sodas-eaux': 'lunch',
-  'a-partager': 'dinner',
-  pizzas: 'dinner',
-  burgers: 'dinner',
-  'crepes-salees': 'dinner',
-  'gateaux-desserts': 'gouter',
-};
-
-const CURATED_ITEM_IDS = new Set(Object.values(SPOTLIGHT).flat());
+}
 
 export function getSpotlightItems(now = new Date()): MenuItem[] {
-  const daypart = getDaypart(now);
-  const scheduledItems = menuItems.filter((item) => {
-    if (CURATED_ITEM_IDS.has(item.id)) return false;
-
-    const assignedDaypart = CATEGORY_DAYPART[item.categoryId];
-    if (!assignedDaypart) {
-      throw new Error(
-        `No homepage spotlight time configured for menu item "${item.id}" in category "${item.categoryId}".`
-      );
-    }
-
-    return assignedDaypart === daypart;
-  });
-
-  return [...SPOTLIGHT[daypart].map(getItemById), ...scheduledItems].filter(
-    (item): item is MenuItem => Boolean(item && item.available)
-  );
+  return SPOTLIGHT[getDaypart(now)]
+    .map((id) => getItemById(id))
+    .filter((item): item is MenuItem => Boolean(item && item.available))
 }

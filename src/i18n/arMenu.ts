@@ -200,9 +200,9 @@ export const arCopy: Record<string, ArCopy> = {
   'cocktail-sweet-mango': { name: 'Sweet manguo', description: 'كوكتيل خفيف بنكهة المانجو' },
   'cocktail-cats-garden': { name: "Le Cat's Garden", description: 'كوكتيل سيغنيتشر الدار' },
 
-  'soda-soda': { name: 'صودا', description: 'صودا حسب الاختيار' },
+  'soda-soda': { name: 'صودا', description: 'كوكا، كوكا زيرو، شويبس ليمون، شويبس تونيك، هاواي تروبيكال أو بومز' },
   'soda-eau-gazeuse': { name: 'ماء غازي', description: 'ماء غازي' },
-  'soda-eau-gazeuse-fruitee': { name: 'ماء غازي بنكهة الفواكه', description: 'ماء غازي بنكهات الفواكه' },
+  'soda-eau-gazeuse-fruitee': { name: 'ماء غازي بنكهة الفواكه', description: 'أولماس فواكه حمراء، أولماس أو أولماس تروبيكال' },
   'soda-red-bull': { name: 'Red Bull', description: 'مشروب طاقة' },
   'soda-eau-minerale-50cl': { name: 'ماء معدني 50 سل', description: 'ماء معدني غير غازي 50 سل' },
   'soda-eau-minerale-150cl': { name: 'ماء معدني 150 سل', description: 'ماء معدني غير غازي 150 سل' },
