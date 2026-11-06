@@ -6,6 +6,7 @@ import type { FamilyId } from './data/families';
 
 import { SplashMark, SplashVeil } from './components/SplashScreen';
 import { Header } from './components/Header';
+import { HouseRules, RULES_SEEN_KEY } from './components/HouseRules';
 import { HomeView } from './components/HomeView';
 import { Footer } from './components/Footer';
 import { BackToTop } from './components/BackToTop';
@@ -40,6 +41,7 @@ function MenuApp({
   const reduce = useReducedMotion();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const [rulesOpen, setRulesOpen] = useState(false);
   const [pawStep, setPawStep] = useState(0);
   const skipPaws = useRef(true);
   const pageKey = familyId ?? 'home';
@@ -48,6 +50,20 @@ function MenuApp({
   useEffect(() => {
     void preloadUiSounds();
   }, []);
+
+  useEffect(() => {
+    if (!showMark) return;
+    if (sessionStorage.getItem(RULES_SEEN_KEY) === '1') return;
+    const id = window.setTimeout(() => {
+      if (sessionStorage.getItem(RULES_SEEN_KEY) !== '1') setRulesOpen(true);
+    }, 520);
+    return () => window.clearTimeout(id);
+  }, [showMark]);
+
+  const closeRules = () => {
+    sessionStorage.setItem(RULES_SEEN_KEY, '1');
+    setRulesOpen(false);
+  };
 
   useEffect(() => {
     if (!ready) return;
@@ -82,7 +98,7 @@ function MenuApp({
         <PawPrint size={120} className="text-sage" />
       </div>
 
-      <Header onLogoClick={goHome} showMark={showMark} />
+      <Header onLogoClick={goHome} onOpenRules={() => setRulesOpen(true)} showMark={showMark} />
 
       <LayoutGroup>
         <div className="page-stage relative">
@@ -125,7 +141,7 @@ function MenuApp({
                     onSearch={setSearchQuery}
                     onOpenFamily={handleOpenFamily}
                     onOpenItem={setSelectedItem}
-                    spotlightPaused={selectedItem !== null}
+                    spotlightPaused={selectedItem !== null || rulesOpen}
                   />
                 </main>
                 <Footer />
@@ -139,7 +155,8 @@ function MenuApp({
       </LayoutGroup>
 
       <DeferredSheet item={selectedItem} onClose={() => setSelectedItem(null)} />
-      <BackToTop hidden={selectedItem !== null} />
+      <HouseRules open={rulesOpen} onClose={closeRules} />
+      <BackToTop hidden={selectedItem !== null || rulesOpen} />
     </div>
   );
 }

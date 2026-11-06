@@ -80,6 +80,14 @@ export interface Translations {
   menuCredit: string;
   boutiqueTitle: string;
   boutiqueNote: string;
+
+  // House rules
+  rulesTitle: string;
+  rulesTitleAccent: string;
+  rulesOpen: string;
+  rulesFarewell: string;
+  rulesSeeMenu: string;
+  rules: readonly string[];
 }
 
 export const translations: Record<Locale, Translations> = {
@@ -153,6 +161,22 @@ export const translations: Record<Locale, Translations> = {
     menuCredit: "Ce menu digital a été créé par l'équipe",
     boutiqueTitle: 'La boutique du chef',
     boutiqueNote: 'Pièces à emporter',
+
+    rulesTitle: 'Règles',
+    rulesTitleAccent: 'au royaume des chats',
+    rulesOpen: 'Règles de la maison',
+    rulesFarewell: 'Passez un agréable moment en compagnie de nos félins !',
+    rulesSeeMenu: 'Voir le menu',
+    rules: [
+      'Pas d’autre animal dans le salon.',
+      'Interdit de fumer ou de vapoter.',
+      'Lavez-vous les mains avant de saluer les chats.',
+      'Ne les nourrissez pas : leurs gamelles sont déjà pleines.',
+      'Laissez dormir les gros dormeurs.',
+      'Ne les retenez pas, ne les forcez pas et ne les secouez pas.',
+      'Parlez doucement : plus de chances d’entendre un ronron.',
+      'Les enfants restent sous surveillance.',
+    ],
   },
   en: {
     appTitle: "Cat's Garden",
@@ -224,6 +248,22 @@ export const translations: Record<Locale, Translations> = {
     menuCredit: 'This digital menu was created by',
     boutiqueTitle: "The chef's boutique",
     boutiqueNote: 'Pastries to take away',
+
+    rulesTitle: 'Rules',
+    rulesTitleAccent: 'of the cats’ kingdom',
+    rulesOpen: 'House rules',
+    rulesFarewell: 'Enjoy a gentle moment with our cats!',
+    rulesSeeMenu: 'See the menu',
+    rules: [
+      'No other pets inside the tearoom.',
+      'No smoking or vaping.',
+      'Wash your hands before greeting the cats.',
+      'Don’t feed them — their bowls are already full.',
+      'Let the sleepy ones rest.',
+      'Don’t hold them, force them, or shake them.',
+      'Speak softly, and you may hear a purr.',
+      'Children stay under supervision.',
+    ],
   },
   ar: {
     appTitle: "Cat's Garden",
@@ -296,6 +336,22 @@ export const translations: Record<Locale, Translations> = {
     menuCredit: 'أُنشئت هذه القائمة الرقمية من طرف فريق',
     boutiqueTitle: 'بوتيك الشيف',
     boutiqueNote: 'حلويات للأخذ',
+
+    rulesTitle: 'قواعد',
+    rulesTitleAccent: 'مملكة القطط',
+    rulesOpen: 'قواعد البيت',
+    rulesFarewell: 'استمتعوا بلحظة لطيفة مع قططنا!',
+    rulesSeeMenu: 'عرض القائمة',
+    rules: [
+      'ممنوع إدخال أي حيوان آخر إلى الصالون.',
+      'ممنوع التدخين أو استخدام السجائر الإلكترونية.',
+      'اغسلوا أيديكم قبل تحية القطط.',
+      'لا تطعموها: أطباقها ممتلئة دائمًا.',
+      'اتركوا القطط النائمة ترتاح.',
+      'لا تمسكوها ولا تجبروها على البقاء ولا تهزّوها.',
+      'تحدّثوا بهدوء لتحظوا بسماع خرخرتها.',
+      'يبقى الأطفال تحت المراقبة.',
+    ],
   },
 };
 

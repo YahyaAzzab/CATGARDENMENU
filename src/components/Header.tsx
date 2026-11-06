@@ -3,7 +3,15 @@ import { LanguageSwitcher } from './LanguageSwitcher';
 import { PawPrint } from './Icons';
 import { BrandLogo } from './BrandLogo';
 
-export function Header({ onLogoClick, showMark }: { onLogoClick?: () => void; showMark: boolean }) {
+export function Header({
+  onLogoClick,
+  onOpenRules,
+  showMark,
+}: {
+  onLogoClick?: () => void;
+  onOpenRules: () => void;
+  showMark: boolean;
+}) {
   const { t } = useI18n();
   const space = t.appTitle.indexOf(' ');
   const cats = space === -1 ? t.appTitle : t.appTitle.slice(0, space + 1);
@@ -40,8 +48,17 @@ export function Header({ onLogoClick, showMark }: { onLogoClick?: () => void; sh
           </div>
         </button>
 
-        {/* Language switcher */}
-        <LanguageSwitcher />
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onOpenRules}
+            aria-label={t.rulesOpen}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-peach-light bg-peach-muted text-peach-dark"
+          >
+            <PawPrint size={18} />
+          </button>
+          <LanguageSwitcher />
+        </div>
       </div>
     </header>
   );
